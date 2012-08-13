@@ -28,7 +28,7 @@
             "type": "html",
             "source": "screen.html",
             "icon": "turtleIcon.png",
-            "next": "wellDone"
+            "next": "screen1 wellDone"
         },
         {
             "name": "wellDone",

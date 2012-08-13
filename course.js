@@ -11,16 +11,32 @@ lectureJS = {
         this.div = div;
         this.fullName = div.attr("id") + name.replace("/", "");
 
-        this.showSlide = function(name) {
+        this.showSlide = function(name, ord, tuple) {
             if (!name)
             {
                 this.currentSlide = this.currentSlides = name = data["slides"][0]["name"];
             }
+
+
+
             var that = this;
             $.each(data["slides"], function(key, val){
                 if (val["name"] === name)
                 {
-                    $("#" + that.fullName+val["name"]).css("display", "inline-block");
+                    $("#" + that.fullName+val["name"]).css("display", "block");
+                    if (tuple && ord===0)
+                    {
+                        $("#" + that.fullName+val["name"]).css("margin-left", "-420px");
+                    }
+                    else if (tuple && ord==1)
+                    {
+                        $("#" + that.fullName+val["name"]).css("margin-left", "0px");
+                    }
+                    else if (tuple)
+                    {
+                        $("#" + that.fullName+val["name"]).css("margin-left", "-210px");
+                    }
+
                     $("#iconOf" + that.fullName+val["name"]).addClass("slideIconActive");
 
                     $("#" + that.fullName+val["name"]).html("");
@@ -60,26 +76,52 @@ lectureJS = {
         this.historyStack = new Array();
 
         this.forward = function() {
-            var kam, that = this;
+            var kam, that = this, ret = true;
             $.each(this.data["slides"], function(key, val){
                 if (val["name"] === that.currentSlide)
                 {
                     if (!val["next"])
                     {
                         alert("Toto je konec kurzu.");
-                        return;
+                        ret = false; return;
                     }
                     kam = val["next"];
+                    ret = true; return;
                 }
             });
+            if (!ret)
+            {
+                return;
+            }
             this.historyStack.push(this.currentSlides);
+            $("#" + this.fullName + "backArrow").fadeOut(200);
+            $("#" + this.fullName + "forwardArrow").fadeOut(200);
             $.each(this.currentSlides.split(" "), function(key, val){
-                $("#"+that.fullName+val).css("display", "none");
+                $("#"+that.fullName+val).animate({
+                    left: "-=100%"
+                }, 1000, function() {
+                    $("#" + that.fullName+val).css("display", "none");
+                    $("#" + that.fullName+val).css("left", "50%");
+
+                    $("#" + that.fullName + "backArrow").css("display", "block");
+                    $("#" + that.fullName + "forwardArrow").css("display", "block");
+                    if (kam.indexOf(" ")>=0)
+                    {
+                        $("#" + that.fullName + "backArrow").css("margin-left", "-500px");
+                        $("#" + that.fullName + "forwardArrow").css("margin-left", "500px");
+                    }
+                    else
+                    {
+                        $("#" + that.fullName + "backArrow").css("margin-left", "-260px");
+                        $("#" + that.fullName + "forwardArrow").css("margin-left", "250px");
+                    }
+                });
+                $("#iconOf"+that.fullName+val).removeClass("slideIconActive");
             });
 
-            this.currentSlides = kam;
+            that.currentSlides = kam;
             $.each(kam.split(" "), function(key, val){
-                that.showSlide(val);
+                that.showSlide(val, key, kam.indexOf(" ")>=0);
                 that.currentSlide = val;
             });
         };
@@ -93,6 +135,7 @@ lectureJS = {
             }
             $.each(this.currentSlides.split(" "), function(key, val){
                 $("#"+that.fullName+val).css("display", "none");
+                $("#iconOf"+that.fullName+val).removeClass("slideIconActive");
             });
             this.currentSlides = this.historyStack.pop();
             var that = this;
@@ -100,11 +143,6 @@ lectureJS = {
                 that.showSlide(val);
                 that.currentSlide = val;
             });
-        };
-
-        this.hideAll = function() {
-            $(".slide").css("display", "none");
-            $(".slideIconActive").removeClass("slideIconActive");
         };
     },
 
@@ -129,9 +167,16 @@ lectureJS = {
                 });
 
                 $("<div>", {
+                    id: newLecture.fullName + "backArrow",
                     class: "arrow-w",
                     click: function() {
                         newLecture.back();
+                    },
+                    mouseover: function() {
+                        $(this).css("border-right-color", "#aaa");
+                    },
+                    mouseout: function(){
+                        $(this).css("border-right-color", "#666");
                     }
                 }).appendTo(innerSlides);
                 $.each(newLecture.data["slides"], function(key, val){
@@ -150,6 +195,7 @@ lectureJS = {
                     slide.appendTo(innerSlides);
                 });
                 $("<div>", {
+                    id: newLecture.fullName + "forwardArrow",
                     class: "arrow-e",
                     click: function() {
                         newLecture.forward();
