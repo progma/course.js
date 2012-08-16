@@ -11,72 +11,83 @@ lectureJS = {
         this.div = div;
         this.fullName = div.attr("id") + name.replace("/", "");
 
-        this.showSlide = function(name, ord, tuple) {
+        this.showSlide = function(name, order, isThereSecond) {
             if (!name)
             {
                 this.currentSlide = this.currentSlides = name = data["slides"][0]["name"];
             }
 
-
-
             var that = this;
-            $.each(data["slides"], function(key, val){
-                if (val["name"] === name)
+            $.each(data["slides"], function(key, slide){
+                if (slide.name === name)
                 {
-                    $("#" + that.fullName+val["name"]).css("display", "block");
-                    if (tuple && ord===0)
+                    if (isThereSecond && order===0)
                     {
-                        $("#" + that.fullName+val["name"]).css("margin-left", "-420px");
+                        slide.div.css("margin-left", "-440px");
                     }
-                    else if (tuple && ord==1)
+                    else if (isThereSecond && order==1)
                     {
-                        $("#" + that.fullName+val["name"]).css("margin-left", "0px");
+                        slide.div.css("margin-left", "1px");
                     }
-                    else if (tuple)
+                    else
                     {
-                        $("#" + that.fullName+val["name"]).css("margin-left", "-210px");
+                        slide.div.css("margin-left", "-210px");
                     }
 
-                    $("#iconOf" + that.fullName+val["name"]).addClass("slideIconActive");
+                    slide.iconDiv.addClass("slideIconActive");
+                    slide.div.css("display", "block");
+                    slide.div.css("left", "150%");
+                    slide.div.animate({
+                    	left: "-=100%"
+                    	}, 1000);
+                    slide.div.html("");
 
-                    $("#" + that.fullName+val["name"]).html("");
-
-                    if (val["type"] === "html")
+                    if (slide.type === "html")
                     {
                         $.ajax({
-                            url: that.name+"/"+val["source"],
+                            url: that.name+"/"+slide.source,
                             dataType: "text"
                         }).done(function(data){
-                                $("#" + that.fullName+val["name"]).html(data);
+                                slide.div.html(data);
                             });
                     }
-                    else if (val["type"] === "code")
+                    else if (slide.type === "code")
                     {
                         $("<textarea>", {
-                            id: "textboxOf" + that.fullName+val["name"],
+                            id: "textboxOf" + that.fullName+slide.name,
                             style: "width: 80%; height: 200px;"
-                        }).appendTo($("#" + that.fullName+val["name"]));
+                        }).appendTo($("#" + that.fullName+slide.name));
                         $.ajax({
-                            url: that.name+"/"+val["defaultCode"],
+                            url: that.name+"/"+slide.defaultCode,
                             dataType: "text"
                         }).done(function(data){
-                                $("#textboxOf" + that.fullName+val["name"]).val(data);
+                                $("#textboxOf" + that.fullName+slide.name).val(data);
                             });
                         $("<button>", {
                             text: "Run",
                             click: function(){
-                                eval(val["run"] + "($('#" + "textboxOf" + that.fullName+val["name"] + "').val(), " + that.fullName + val["drawTo"] + ")");
+                                eval(slide.run + "($('#" + "textboxOf" + that.fullName+slide.name + "').val(), " + that.fullName + slide.drawTo + ")");
                             }
-                        }).appendTo($("#" + that.fullName+val["name"]));
+                        }).appendTo(slide.div);
                     }
                 }
             });
+        };
+        
+        this.hideSlide = function(slideName) {
+        	$("#"+this.fullName+slideName).animate({
+                left: "-=100%"
+            }, 1000, function() {
+                $("#" + this.fullName+slideName).css("display", "none");
+            });
+            $("#iconOf"+this.fullName+slideName).removeClass("slideIconActive");
         };
 
         this.historyStack = new Array();
 
         this.forward = function() {
             var kam, that = this, ret = true;
+            
             $.each(this.data["slides"], function(key, val){
                 if (val["name"] === that.currentSlide)
                 {
@@ -93,37 +104,20 @@ lectureJS = {
             {
                 return;
             }
+            
             this.historyStack.push(this.currentSlides);
-            $("#" + this.fullName + "backArrow").fadeOut(200);
-            $("#" + this.fullName + "forwardArrow").fadeOut(200);
-            $.each(this.currentSlides.split(" "), function(key, val){
-                $("#"+that.fullName+val).animate({
-                    left: "-=100%"
-                }, 1000, function() {
-                    $("#" + that.fullName+val).css("display", "none");
-                    $("#" + that.fullName+val).css("left", "50%");
 
-                    $("#" + that.fullName + "backArrow").css("display", "block");
-                    $("#" + that.fullName + "forwardArrow").css("display", "block");
-                    if (kam.indexOf(" ")>=0)
-                    {
-                        $("#" + that.fullName + "backArrow").css("margin-left", "-500px");
-                        $("#" + that.fullName + "forwardArrow").css("margin-left", "500px");
-                    }
-                    else
-                    {
-                        $("#" + that.fullName + "backArrow").css("margin-left", "-260px");
-                        $("#" + that.fullName + "forwardArrow").css("margin-left", "250px");
-                    }
-                });
-                $("#iconOf"+that.fullName+val).removeClass("slideIconActive");
+            $.each(this.currentSlides.split(" "), function(key, slideName){
+                that.hideSlide(slideName);
             });
 
             that.currentSlides = kam;
-            $.each(kam.split(" "), function(key, val){
-                that.showSlide(val, key, kam.indexOf(" ")>=0);
-                that.currentSlide = val;
+            $.each(kam.split(" "), function(key, slideName){
+                that.showSlide(slideName, key, kam.indexOf(" ")>=0);
+                that.currentSlide = slideName;
             });
+            
+            this.showArrows(kam.indexOf(" ")>=0 ? 2 : 1);
         };
 
         this.back = function() {
@@ -133,17 +127,42 @@ lectureJS = {
                 alert("Toto je začátek kurzu.");
                 return;
             }
-            $.each(this.currentSlides.split(" "), function(key, val){
-                $("#"+that.fullName+val).css("display", "none");
-                $("#iconOf"+that.fullName+val).removeClass("slideIconActive");
+            
+            $.each(this.currentSlides.split(" "), function(key, slideName){
+                that.hideSlide(slideName);
             });
+            
             this.currentSlides = this.historyStack.pop();
-            var that = this;
+            
             $.each(this.currentSlides.split(" "), function(key, val){
                 that.showSlide(val);
                 that.currentSlide = val;
             });
+            
+            this.showArrows(this.currentSlides.indexOf(" ")>=0 ? 2 : 1);
         };
+  		
+  		
+  		// Arrows!
+  		this.hideArrows = function(slidesNo) {
+  			$("#" + this.fullName + "backArrow").fadeOut(200);
+            $("#" + this.fullName + "forwardArrow").fadeOut(200);
+  		};
+  		
+  		this.showArrows = function(slidesNo) {
+  			if (slidesNo === 2)
+            {
+                $("#" + this.fullName + "backArrow").css("margin-left", "-490px");
+                $("#" + this.fullName + "forwardArrow").css("margin-left", "430px");
+            }
+            else if (slidesNo === 1)
+            {
+                $("#" + this.fullName + "backArrow").css("margin-left", "-260px");
+                $("#" + this.fullName + "forwardArrow").css("margin-left", "220px");
+            }
+            $("#" + this.fullName + "backArrow").fadeIn(200);
+            $("#" + this.fullName + "forwardArrow").fadeIn(200);
+  		}
     },
 
     lectures: {
@@ -179,20 +198,22 @@ lectureJS = {
                         $(this).css("border-right-color", "#666");
                     }
                 }).appendTo(innerSlides);
-                $.each(newLecture.data["slides"], function(key, val){
+                $.each(newLecture.data["slides"], function(i, slide){
                     var slideIcon = $("<div>", {
-                        id: "iconOf" + newLecture.fullName + val["name"],
+                        id: "iconOf" + newLecture.fullName + slide.name,
                         class: "slideIcon",
-                        style: val["icon"] ?
-                            "background-image: url('" + name + "/" + val["icon"] + "')" :
-                            "background-image: url('icons/" + val["type"] + ".png')"
+                        style: slide.icon ?
+                            "background-image: url('" + name + "/" + slide.icon + "')" :
+                            "background-image: url('icons/" + slide.type + ".png')"
                     }).appendTo(slideList);
-                    var slide = $("<div>", {
-                        id: newLecture.fullName+val["name"],
+                    var slideDiv = $("<div>", {
+                        id: newLecture.fullName+slide.name,
                         class: "slide",
                         style: "display: none"
                     });
-                    slide.appendTo(innerSlides);
+                    slide["div"] = slideDiv;
+                    slide["iconDiv"] = slideIcon;
+                    slideDiv.appendTo(innerSlides);
                 });
                 $("<div>", {
                     id: newLecture.fullName + "forwardArrow",
