@@ -11,76 +11,109 @@ lectureJS = {
         this.div = div;
         this.fullName = div.attr("id") + name.replace("/", "");
 
-        this.showSlide = function(name, order, isThereSecond) {
-            if (!name)
+        this.showSlide = function(slideName, order, isThereSecond, toRight) {
+            if (!slideName)
             {
-                this.currentSlide = this.currentSlides = name = data["slides"][0]["name"];
+                this.currentSlide = this.currentSlides = slideName = data.slides[0].name;
             }
 
-            var that = this;
-            $.each(data["slides"], function(key, slide){
-                if (slide.name === name)
-                {
-                    if (isThereSecond && order===0)
-                    {
-                        slide.div.css("margin-left", "-440px");
-                    }
-                    else if (isThereSecond && order==1)
-                    {
-                        slide.div.css("margin-left", "1px");
-                    }
-                    else
-                    {
-                        slide.div.css("margin-left", "-210px");
-                    }
+            var slide = this.getSlide(slideName);
+            slide["toShow"] = true;
+            
+            if (isThereSecond && order===0)
+            {
+                slide.div.css("margin-left", "-440px");
+            }
+            else if (isThereSecond && order==1)
+            {
+                slide.div.css("margin-left", "1px");
+            }
+            else
+            {
+                slide.div.css("margin-left", "-210px");
+            }
 
-                    slide.iconDiv.addClass("slideIconActive");
-                    slide.div.css("display", "block");
-                    slide.div.css("left", "150%");
-                    slide.div.animate({
-                    	left: "-=100%"
-                    	}, 1000);
-                    slide.div.html("");
+            slide.iconDiv.addClass("slideIconActive");
+            slide.div.css("display", "block");
+            if (toRight)
+            {
+            	slide.div.css("left", "150%");
+            	slide.div.animate({
+            		left: "-=100%"
+            		}, 1000);
+           	}
+           	else
+           	{
+           		slide.div.css("left", "-50%");
+            	slide.div.animate({
+            		left: "+=100%"
+            		}, 1000);
+           	}
+            slide.div.html("");
 
-                    if (slide.type === "html")
-                    {
-                        $.ajax({
-                            url: that.name+"/"+slide.source,
-                            dataType: "text"
-                        }).done(function(data){
-                                slide.div.html(data);
-                            });
+            if (slide.type === "html")
+            {
+                $.ajax({
+                    url: this.name+"/"+slide.source,
+                    dataType: "text"
+                }).done(function(data){
+                        slide.div.html(data);
+                    });
+            }
+            else if (slide.type === "code")
+            {
+                $("<textarea>", {
+                    id: "textboxOf" + this.fullName+slide.name,
+                    style: "width: 80%; height: 200px;"
+                }).appendTo(slide.div);
+                $.ajax({
+                    url: this.name+"/"+slide.defaultCode,
+                    dataType: "text"
+                }).done(function(data){
+                        $("#textboxOf" + this.fullName+slide.name).val(data);
+                    });
+                $("<button>", {
+                    text: "Run",
+                    click: function(){
+                        eval(slide.run + "($('#" + "textboxOf" + this.fullName+slide.name + "').val(), " + this.fullName + slide.drawTo + ")");
                     }
-                    else if (slide.type === "code")
-                    {
-                        $("<textarea>", {
-                            id: "textboxOf" + that.fullName+slide.name,
-                            style: "width: 80%; height: 200px;"
-                        }).appendTo($("#" + that.fullName+slide.name));
-                        $.ajax({
-                            url: that.name+"/"+slide.defaultCode,
-                            dataType: "text"
-                        }).done(function(data){
-                                $("#textboxOf" + that.fullName+slide.name).val(data);
-                            });
-                        $("<button>", {
-                            text: "Run",
-                            click: function(){
-                                eval(slide.run + "($('#" + "textboxOf" + that.fullName+slide.name + "').val(), " + that.fullName + slide.drawTo + ")");
-                            }
-                        }).appendTo(slide.div);
-                    }
-                }
-            });
+                }).appendTo(slide.div);
+            }
         };
         
-        this.hideSlide = function(slideName) {
-        	$("#"+this.fullName+slideName).animate({
-                left: "-=100%"
-            }, 1000, function() {
-                $("#" + this.fullName+slideName).css("display", "none");
-            });
-            $("#iconOf"+this.fullName+slideName).removeClass("slideIconActive");
+        this.hideSlide = function(slideName, toLeft) {
+        	var slide = this.getSlide(slideName);
+        	if (toLeft)
+        	{
+	        	slide.div.animate({
+	                left: "-=100%"
+	            }, 1000, function() {
+	            	if (!slide.toShow)
+	            	{
+	                	slide.div.css("display", "none");
+	              	}
+	              	else
+	              	{
+	              		slide.toShow = false;
+	              	};
+	            });
+            }
+            else
+            {
+            	slide.div.animate({
+	                left: "+=100%"
+	            }, 1000, function() {
+	                if (!slide.toShow)
+	            	{
+	                	slide.div.css("display", "none");
+	              	}
+	              	else
+	              	{
+	              		slide.toShow = false;
+	              	};
+	            });
+            }
+            slide.iconDiv.removeClass("slideIconActive");
         };
 
         this.historyStack = new Array();
@@ -88,36 +121,26 @@ lectureJS = {
         this.forward = function() {
             var kam, that = this, ret = true;
             
-            $.each(this.data["slides"], function(key, val){
-                if (val["name"] === that.currentSlide)
-                {
-                    if (!val["next"])
-                    {
-                        alert("Toto je konec kurzu.");
-                        ret = false; return;
-                    }
-                    kam = val["next"];
-                    ret = true; return;
-                }
-            });
-            if (!ret)
+            var slide = this.getSlide(that.currentSlide);
+            if (!slide.next)
             {
+                alert("Toto je konec kurzu.");
                 return;
             }
             
             this.historyStack.push(this.currentSlides);
 
             $.each(this.currentSlides.split(" "), function(key, slideName){
-                that.hideSlide(slideName);
+                that.hideSlide(slideName, true);
             });
 
-            that.currentSlides = kam;
-            $.each(kam.split(" "), function(key, slideName){
-                that.showSlide(slideName, key, kam.indexOf(" ")>=0);
+            that.currentSlides = slide.next;
+            $.each(slide.next.split(" "), function(key, slideName){
+                that.showSlide(slideName, key, slide.next.indexOf(" ")>=0, true);
                 that.currentSlide = slideName;
             });
             
-            this.showArrows(kam.indexOf(" ")>=0 ? 2 : 1);
+            this.showArrows(slide.next.indexOf(" ")>=0 ? 2 : 1);
         };
 
         this.back = function() {
@@ -129,13 +152,13 @@ lectureJS = {
             }
             
             $.each(this.currentSlides.split(" "), function(key, slideName){
-                that.hideSlide(slideName);
+                that.hideSlide(slideName, false);
             });
             
             this.currentSlides = this.historyStack.pop();
             
             $.each(this.currentSlides.split(" "), function(key, val){
-                that.showSlide(val);
+                that.showSlide(val, false);
                 that.currentSlide = val;
             });
             
@@ -162,7 +185,17 @@ lectureJS = {
             }
             $("#" + this.fullName + "backArrow").fadeIn(200);
             $("#" + this.fullName + "forwardArrow").fadeIn(200);
-  		}
+  		};
+  		
+  		this.getSlide = function(slideName) {
+  			for (var i=0; i<this.data.slides.length; i++)
+  			{
+  			    if (this.data.slides[i].name === slideName)
+                {
+                	return this.data.slides[i];
+                };
+            };
+  		};
     },
 
     lectures: {
@@ -227,7 +260,7 @@ lectureJS = {
                 innerSlides.appendTo(theDiv);
 
                 ls.push(newLecture);
-                newLecture.showSlide();
+                newLecture.showSlide(undefined, 0, false, true);
             }).error(function() {
                     slideList.html("<p style='position: relative; top: 0.5em'>Course at '" + name + "' is not available.");
                     slideList.appendTo(theDiv);
