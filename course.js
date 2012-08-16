@@ -18,22 +18,9 @@ lectureJS = {
             }
 
             var slide = this.getSlide(slideName);
-            slide["toShow"] = true;
             
-            if (isThereSecond && order===0)
-            {
-                slide.div.css("margin-left", "-440px");
-            }
-            else if (isThereSecond && order==1)
-            {
-                slide.div.css("margin-left", "1px");
-            }
-            else
-            {
-                slide.div.css("margin-left", "-210px");
-            }
-
             slide.iconDiv.addClass("slideIconActive");
+            slide.div.css("margin-left", isThereSecond ? (order===0 ? "-440px" : "1px") : "-210px");
             slide.div.css("display", "block");
             if (toRight)
             {
@@ -49,7 +36,13 @@ lectureJS = {
             		left: "+=100%"
             		}, 1000);
            	}
-            slide.div.html("");
+           	
+           	this.loadSlide(slide);
+        };
+        
+        this.loadSlide = function(slide) {
+        	slide.div.html("");
+        	var that = this;
 
             if (slide.type === "html")
             {
@@ -70,12 +63,12 @@ lectureJS = {
                     url: this.name+"/"+slide.defaultCode,
                     dataType: "text"
                 }).done(function(data){
-                        $("#textboxOf" + this.fullName+slide.name).val(data);
+                        $("#textboxOf" + that.fullName+slide.name).val(data);
                     });
                 $("<button>", {
                     text: "Run",
                     click: function(){
-                        eval(slide.run + "($('#" + "textboxOf" + this.fullName+slide.name + "').val(), " + this.fullName + slide.drawTo + ")");
+                        eval(slide.run + "($('#" + "textboxOf" + that.fullName+slide.name + "').val(), document.getElementById('" + that.fullName + slide.drawTo + "'))");
                     }
                 }).appendTo(slide.div);
             }
@@ -88,14 +81,7 @@ lectureJS = {
 	        	slide.div.animate({
 	                left: "-=100%"
 	            }, 1000, function() {
-	            	if (!slide.toShow)
-	            	{
-	                	slide.div.css("display", "none");
-	              	}
-	              	else
-	              	{
-	              		slide.toShow = false;
-	              	};
+	            	slide.div.css("display", "none");
 	            });
             }
             else
@@ -103,17 +89,17 @@ lectureJS = {
             	slide.div.animate({
 	                left: "+=100%"
 	            }, 1000, function() {
-	                if (!slide.toShow)
-	            	{
-	                	slide.div.css("display", "none");
-	              	}
-	              	else
-	              	{
-	              		slide.toShow = false;
-	              	};
+	                slide.div.css("display", "none");
 	            });
             }
             slide.iconDiv.removeClass("slideIconActive");
+        };
+        
+        this.moveSlide = function(slideName, lastOrder, toLeft) {
+        	var slide = this.getSlide(slideName);
+        	slide.div.animate({
+                "margin-left": "-=440px"
+            	}, 1000);
         };
 
         this.historyStack = new Array();
@@ -130,15 +116,25 @@ lectureJS = {
             
             this.historyStack.push(this.currentSlides);
 
-            $.each(this.currentSlides.split(" "), function(key, slideName){
-                that.hideSlide(slideName, true);
+			$.each(this.currentSlides.split(" "), function(i, slideName){
+				if (slideName===slide.next.split(" ")[0])
+				{
+					that.moveSlide(slideName, i, true);	
+				}
+				else
+				{
+                	that.hideSlide(slideName, true);
+               	}
             });
 
-            that.currentSlides = slide.next;
-            $.each(slide.next.split(" "), function(key, slideName){
-                that.showSlide(slideName, key, slide.next.indexOf(" ")>=0, true);
+            $.each(slide.next.split(" "), function(i, slideName){
+            	if (slideName!==that.currentSlides.split(" ")[that.currentSlides.split(" ").length-1])
+            	{
+                	that.showSlide(slideName, i, slide.next.indexOf(" ")>=0, true);
+                }
                 that.currentSlide = slideName;
             });
+            that.currentSlides = slide.next;
             
             this.showArrows(slide.next.indexOf(" ")>=0 ? 2 : 1);
         };
