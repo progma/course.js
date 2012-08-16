@@ -55,22 +55,24 @@ lectureJS = {
             }
             else if (slide.type === "code")
             {
-                $("<textarea>", {
-                    id: "textboxOf" + this.fullName+slide.name,
-                    style: "width: 80%; height: 200px;"
-                }).appendTo(slide.div);
-                $.ajax({
+            	$.ajax({
                     url: this.name+"/"+slide.defaultCode,
                     dataType: "text"
                 }).done(function(data){
-                        $("#textboxOf" + that.fullName+slide.name).val(data);
+                		var cm = new CodeMirror(slide.div.get(0), {
+            				value: data,
+            				lineNumbers: true
+            			});
+            			cm.setSize(380, 200);
+            			
+            			$("<button>", {
+		                    text: "Run",
+		                    class: "btn",
+		                    click: function(){
+		                        eval(slide.run + "(cm.getValue(), document.getElementById('" + that.fullName + slide.drawTo + "'))");
+		                    }
+		                }).appendTo(slide.div);
                     });
-                $("<button>", {
-                    text: "Run",
-                    click: function(){
-                        eval(slide.run + "($('#" + "textboxOf" + that.fullName+slide.name + "').val(), document.getElementById('" + that.fullName + slide.drawTo + "'))");
-                    }
-                }).appendTo(slide.div);
             }
         };
         
