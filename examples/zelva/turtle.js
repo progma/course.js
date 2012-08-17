@@ -23,8 +23,9 @@ turtle = {
             turtle.paper.remove();
         }
 
-        var paper = Raphael(canvas, 200, 200);
+        var paper = Raphael(canvas, 380, 200);
         turtle.paper = paper;
+        paper.rect(0, 0, 380, 200).attr({ fill: "#fff" });
         eval(code);
         turtle.drawTurtle();
     },
@@ -34,6 +35,7 @@ turtle = {
     },
 
     drawTurtle: function() {
-        return;
+        im = turtle.paper.image("examples/zelva/zelva.png", poziceX+90, poziceY+84, 20, 30);
+        im.rotate(uhel);
     }
 }
