@@ -63,6 +63,7 @@
     left: 50%;
     margin-top: 110px;
     width: 42px; height: 42px;
+    opacity: .5;
 }
 
 .arrow-e {

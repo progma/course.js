@@ -223,10 +223,14 @@ lectureJS = {
                         newLecture.back();
                     },
                     mouseover: function() {
-                        $(this).css("border-right-color", "#aaa");
+                        $(this).animate({
+                        	opacity: "+=0.4"
+                        }, 500);
                     },
                     mouseout: function(){
-                        $(this).css("border-right-color", "#666");
+                        $(this).animate({
+                        	opacity: "-=0.4"
+                        }, 500);
                     }
                 }).appendTo(innerSlides);
                 $.each(newLecture.data["slides"], function(i, slide){
@@ -251,6 +255,16 @@ lectureJS = {
                     class: "arrow-e",
                     click: function() {
                         newLecture.forward();
+                    },
+                    mouseover: function() {
+                        $(this).animate({
+                        	opacity: "+=0.4"
+                        }, 500);
+                    },
+                    mouseout: function(){
+                        $(this).animate({
+                        	opacity: "-=0.4"
+                        }, 500);
                     }
                 }).appendTo(innerSlides);
 
