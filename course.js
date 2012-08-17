@@ -51,33 +51,75 @@ lectureJS = {
                     dataType: "text"
                 }).done(function(data){
                         slide.div.html(data);
+                        
+                        that.continueLoad(slide);
                     });
             }
             else if (slide.type === "code")
             {
-            	$.ajax({
-                    url: this.name+"/"+slide.defaultCode,
-                    dataType: "text"
-                }).done(function(data){
-                		var cm = new CodeMirror(slide.div.get(0), {
-            				value: data,
-            				lineNumbers: true
-            			});
-            			cm.setSize(380, 200);
-            			
-            			$("<button>", {
-		                    text: "Run",
-		                    class: "btn",
-		                    click: function(){
-		                        eval(slide.run + "(cm.getValue(), document.getElementById('" + that.fullName + slide.drawTo + "'))");
-		                    }
-		                }).appendTo(slide.div);
-                    });
+        		var cm = new CodeMirror(slide.div.get(0), {
+    				lineNumbers: true
+    			});
+    			cm.setSize(380, 200);
+    			slide.cm = cm;
+    			
+    			$("<button>", {
+                    text: "Run",
+                    class: "btn",
+                    click: function(){
+                        eval(slide.run + "(cm.getValue(), document.getElementById('" + that.fullName + slide.drawTo + "'))");
+                    }
+                }).appendTo(slide.div);
+                
+                that.continueLoad(slide);
             }
+        };
+        
+        this.continueLoad = function(slide) {
+        	if (slide.sound)
+            {
+            	this.playSound(slide, slide.sound);
+            }
+            if (slide.talk)
+            {
+            	this.playTalk(slide, slide.talk);
+            }
+        };
+        
+        this.playSound = function(slide, soundName) {
+        	var sound = new buzz.sound(this.name+"/"+soundName, {
+        		formats: ["wav"]
+        	});
+        	sound.play();
+        	slide.soundPlayer = sound;
+        };
+        
+        this.stopSound = function(slide) {
+        	slide.soundPlayer.stop();
+        };
+        
+        this.playTalk = function(slide, talkName) {
+        	slide.playTalk = true;
+        	$.getJSON(this.name+"/"+talkName + ".talk", function(recordingTracks) {
+			    $.each(recordingTracks, function (name, track) {
+			        $.map(track, function (event) {
+			            setTimeout(
+			            	function () { if (slide.playTalk) { playbook[name](event.value, slide.cm); }; },
+			                event.time
+			            );});});
+		    });
         };
         
         this.hideSlide = function(slideName, toLeft) {
         	var slide = this.getSlide(slideName);
+        	if (slide.soundPlayer)
+        	{
+        		slide.soundPlayer.stop();
+        	}
+        	if (slide.playTalk)
+        	{
+        		slide.playTalk = false;
+        	}
         	if (toLeft)
         	{
 	        	slide.div.animate({

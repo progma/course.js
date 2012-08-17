@@ -19,7 +19,8 @@
         {
             "name": "code1",
             "type": "code",
-            "defaultCode": "domecek.js",
+            "talk": "aboutTurtles",
+            "sound": "caj",
             "run": "turtle.run",
             "drawTo": "screen1"
         },
