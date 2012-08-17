@@ -3,6 +3,7 @@
         "raphael-min.js",
         "turtle.js"
     ],
+    "startWith": "intro",
     "slides": [
         {
             "name": "intro",
@@ -20,7 +21,7 @@
             "name": "code1",
             "type": "code",
             "talk": "aboutTurtles",
-            "sound": "caj",
+            "sound": "caj.wav",
             "run": "turtle.run",
             "drawTo": "screen1"
         },

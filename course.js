@@ -1,4 +1,8 @@
 $(document).ready(function(){
+	soundManager.setup({
+	  url: 'lib/soundManagerSwf'
+	});
+
     $("div[slidedata]").each(function(i, div){
         lectureJS.lectures.createLecture($(div));
     });
@@ -78,47 +82,34 @@ lectureJS = {
         this.continueLoad = function(slide) {
         	if (slide.sound)
             {
-            	this.playSound(slide, slide.sound);
-            }
-            if (slide.talk)
-            {
-            	this.playTalk(slide, slide.talk);
+            	this.playSound(slide, slide.sound, slide.talk);
             }
         };
         
-        this.playSound = function(slide, soundName) {
-        	var sound = new buzz.sound(this.name+"/"+soundName, {
-        		formats: ["wav"]
+        this.playSound = function(slide, soundName, talkName) {
+        	slide.soundObject = soundManager.createSound({
+        		id: soundName,
+        		url: this.name+"/"+soundName
         	});
-        	sound.play();
-        	slide.soundPlayer = sound;
-        };
-        
-        this.stopSound = function(slide) {
-        	slide.soundPlayer.stop();
-        };
-        
-        this.playTalk = function(slide, talkName) {
-        	slide.playTalk = true;
         	$.getJSON(this.name+"/"+talkName + ".talk", function(recordingTracks) {
 			    $.each(recordingTracks, function (name, track) {
 			        $.map(track, function (event) {
-			            setTimeout(
-			            	function () { if (slide.playTalk) { playbook[name](event.value, slide.cm); }; },
-			                event.time
-			            );});});
+			        	slide.soundObject.onPosition(event.time, function () { playbook[name](event.value, slide.cm); });
+			        });
+			    });
+			    slide.soundObject.play();
 		    });
+        };
+        
+        this.stopSound = function(slide) {
+        	soundManager.destruct();
         };
         
         this.hideSlide = function(slideName, toLeft) {
         	var slide = this.getSlide(slideName);
-        	if (slide.soundPlayer)
+        	if (slide.soundObject)
         	{
-        		slide.soundPlayer.stop();
-        	}
-        	if (slide.playTalk)
-        	{
-        		slide.playTalk = false;
+        		slide.soundObject.stop();
         	}
         	if (toLeft)
         	{
