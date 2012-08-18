@@ -43,7 +43,7 @@ class Lecture
       $("<button>",
         text: "Run"
         class: "btn"
-        click: ->
+        click: =>
           eval("#{slide.run}(cm.getValue(), document.getElementById('#{@fullName}#{slide.drawTo}'))")
       ).appendTo slide.div
       @continueLoad slide
