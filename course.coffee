@@ -85,8 +85,6 @@ class Lecture
   historyStack: new Array()
   
   forward: ->
-    kam = undefined
-    ret = true
     slide = @getSlide(@currentSlide)
     unless slide.next
       alert "Toto je konec kurzu."
