@@ -6,7 +6,7 @@ $(document).ready(->
 
 class Lecture
   constructor: (@name, @data, @div) ->
-    @fullName = (@div.attr "id") + @name.replace "/", ""
+    @fullName = @div.attr "id" + @name.replace "/", ""
     
   showSlide: (slideName, order, isThereSecond, toRight) ->
     if (!slideName)
@@ -14,7 +14,7 @@ class Lecture
 
     slide = @getSlide(slideName)
     slide.iconDiv.addClass "slideIconActive"
-    slide.div.css "margin-left", (if isThereSecond then ((if order is 0 then "-440px" else "1px")) else "-210px")
+    slide.div.css "margin-left", (if isThereSecond then ((if order == 0 then "-440px" else "1px")) else "-210px")
     slide.div.css "display", "block"
     if toRight
       slide.div.css "left", "150%"
@@ -26,16 +26,15 @@ class Lecture
 
   loadSlide: (slide) ->
     slide.div.html ""
-    that = this
-    if slide.type is "html"
+    if slide.type == "html"
       $.ajax(
         url: @name + "/" + slide.source
         dataType: "text"
-      ).done (data) ->
+      ).done (data) =>
         slide.div.html data
-        that.continueLoad slide
+        @continueLoad slide
   
-    else if slide.type is "code"
+    else if slide.type == "code"
       cm = new CodeMirror(slide.div.get(0),
         lineNumbers: true
       )
@@ -45,29 +44,26 @@ class Lecture
         text: "Run"
         class: "btn"
         click: ->
-          eval_ slide.run + "(cm.getValue(), document.getElementById('" + that.fullName + slide.drawTo + "'))"
+          eval("#{slide.run}(cm.getValue(), document.getElementById('#{@fullName}#{slide.drawTo}'))")
       ).appendTo slide.div
-      that.continueLoad slide
+      @continueLoad slide
   
   continueLoad: (slide) ->
-    if slide.sound
+    if slide.sound?
       @playSound slide, slide.sound, slide.talk
   
   playSound: (slide, soundName, talkName) ->
-    slide.soundObject = soundManager.createSound(
+    slide.soundObject = soundManager.createSound
       id: soundName
       url: @name + "/" + soundName
-    )
+      
     $.getJSON @name + "/" + talkName + ".talk", (recordingTracks) ->
       $.each recordingTracks, (name, track) ->
         $.map track, (event) ->
           slide.soundObject.onPosition event.time, ->
             playbook[name] event.value, slide.cm
   
-  
-  
       slide.soundObject.play()
-  
   
   stopSound: (slide) ->
     soundManager.destruct()
@@ -90,38 +86,36 @@ class Lecture
   
   forward: ->
     kam = undefined
-    that = this
     ret = true
-    slide = @getSlide(that.currentSlide)
+    slide = @getSlide(@currentSlide)
     unless slide.next
       alert "Toto je konec kurzu."
       return
     @historyStack.push @currentSlides
-    $.each @currentSlides.split(" "), (i, slideName) ->
-      if slideName is slide.next.split(" ")[0]
-        that.moveSlide slideName, i, true
+    $.each @currentSlides.split(" "), (i, slideName) =>
+      if slideName == slide.next.split(" ")[0]
+        @moveSlide slideName, i, true
       else
-        that.hideSlide slideName, true
+        @hideSlide slideName, true
   
-    $.each slide.next.split(" "), (i, slideName) ->
-      that.showSlide slideName, i, slide.next.indexOf(" ") >= 0, true  if slideName isnt that.currentSlides.split(" ")[that.currentSlides.split(" ").length - 1]
-      that.currentSlide = slideName
+    $.each slide.next.split(" "), (i, slideName) =>
+      @showSlide slideName, i, slide.next.indexOf(" ") >= 0, true  if slideName != @currentSlides.split(" ")[@currentSlides.split(" ").length - 1]
+      @currentSlide = slideName
   
-    that.currentSlides = slide.next
+    @currentSlides = slide.next
     @showArrows (if slide.next.indexOf(" ") >= 0 then 2 else 1)
   
   back: ->
-    that = this
-    if @historyStack.length is 0
+    if @historyStack.length == 0
       alert "Toto je začátek kurzu."
       return
-    $.each @currentSlides.split(" "), (key, slideName) ->
-      that.hideSlide slideName, false
+    $.each @currentSlides.split(" "), (key, slideName) =>
+      @hideSlide slideName, false
   
     @currentSlides = @historyStack.pop()
-    $.each @currentSlides.split(" "), (key, val) ->
-      that.showSlide val, false
-      that.currentSlide = val
+    $.each @currentSlides.split(" "), (key, val) =>
+      @showSlide val, false
+      @currentSlide = val
   
     @showArrows (if @currentSlides.indexOf(" ") >= 0 then 2 else 1)
   
@@ -132,10 +126,10 @@ class Lecture
     $("#" + @fullName + "forwardArrow").fadeOut 200
   
   showArrows: (slidesNo) ->
-    if slidesNo is 2
+    if slidesNo == 2
       $("#" + @fullName + "backArrow").css "margin-left", "-490px"
       $("#" + @fullName + "forwardArrow").css "margin-left", "430px"
-    else if slidesNo is 1
+    else if slidesNo == 1
       $("#" + @fullName + "backArrow").css "margin-left", "-260px"
       $("#" + @fullName + "forwardArrow").css "margin-left", "220px"
     $("#" + @fullName + "backArrow").fadeIn 200
@@ -145,7 +139,7 @@ class Lecture
     i = 0
   
     while i < @data.slides.length
-      return @data.slides[i]  if @data.slides[i].name is slideName
+      return @data.slides[i]  if @data.slides[i].name == slideName
       i++
 
 lectures =
@@ -192,5 +186,5 @@ lectures =
       @ls.push newLecture
       newLecture.showSlide `undefined`, 0, false, true
     ).error ->
-      slideList.html "<p style='position: relative; top: 0.5em'>Course at '" + name + "' is not available."
+      slideList.html "<p style='position: relative; top: 0.5em'>Course at '" + name + "' == not available."
       slideList.appendTo theDiv
