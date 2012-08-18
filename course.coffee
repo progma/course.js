@@ -6,7 +6,7 @@ $(document).ready(->
 
 class Lecture
   constructor: (@name, @data, @div) ->
-    @fullName = (div.attr "id") + name.replace "/", ""
+    @fullName = (@div.attr "id") + @name.replace "/", ""
     
   showSlide: (slideName, order, isThereSecond, toRight) ->
     if (!slideName)
