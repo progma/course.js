@@ -86,7 +86,7 @@ class Lecture
   
   # Only visible slides should be able to play sounds.
   stopSound: (slide) ->
-    soundManager.destruct()
+    slide.soundObject.destruct()
 
 
   # Following three functions moves slides' DIVs to proper places. 
@@ -193,7 +193,8 @@ class Lecture
       i++
 
 # We use abbreviations in the course description file: one object for two or more slides.
-# This is where we translate them to basic slides. 
+# This is where we translate them to basic slides. Every function stands
+# for an advanced slide.
 TurtleSlidesHelper =
   turtleTalk: (slide) ->
     [
