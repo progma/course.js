@@ -57,6 +57,7 @@
             "name": "house",
             "type": "turtleTask",
             "text": "04-house.html",
+            "code": "04-house.start.turtle",
             "expected": "04-house.turtle",
             "go": "nextTwo"
         },

@@ -37,16 +37,32 @@ class Lecture
         slide.div.html "<center>There was an unusual accident during the load.</center>"
   
     else if slide.type == "code"
+      textDiv = $("<div>");
+      textDiv.appendTo slide.div;
+      if slide.text?
+        $.ajax(
+          url: @name + "/" + slide.text
+          dataType: "text"
+        ).done (data) =>
+          textDiv.html data
+          textDiv.height "80px"
+    
       cm = new CodeMirror(slide.div.get(0),
         lineNumbers: true
       )
-      cm.setSize 380, 200
+      if slide.code
+        $.ajax(
+          url: @name + "/" + slide.code
+          dataType: "text"
+        ).done (data) => cm.setValue(data)
+      
+      cm.setSize 380, 360
       slide.cm = cm
       $("<button>",
         text: "Run"
         class: "btn"
         click: =>
-          eval("#{slide.run}(cm.getValue(), document.getElementById('#{@fullName}#{slide.drawTo}'))")
+          window[slide.run](cm.getValue(), document.getElementById(@fullName + slide.drawTo))
           if !@data.userCode?
             @data.userCode = {}
           @data.userCode[slide.name] = slide.cm.getValue()
@@ -177,10 +193,13 @@ TurtleSlidesHelper =
     [
       name: slide.name + "TextPad"
       type: "code"
-      source: slide.text
+      text: slide.text
+      code: slide.code
+      run: "turtle.run"
+      drawTo: slide.name + "TurtleDen"
     ,
       name: slide.name + "TurtleDen"
-      type: html
+      type: "html"
       go: "move"
     ,
       name: slide.name + "Test"
@@ -205,7 +224,6 @@ lectures =
           memo.push slide
         return memo
       , []
-      window.data = data
       
       newLecture = new Lecture name, data, theDiv
       $.each newLecture.data["load"], (key, val) -> $.getScript name + "/" + val
