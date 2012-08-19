@@ -2,13 +2,14 @@ $(document).ready(->
   soundManager.setup url: "lib/soundManagerSwf"
   $("div[slidedata]").each (i, div) ->
     lectures.createLecture $(div)
-  window.lectures = lectures
+  window.lectures = lectures    # nice to have in debugging process
 )
 
 class Lecture
   constructor: (@name, @data, @div) ->
     @fullName = (@div.attr "id") + @name.replace "/", ""
     
+  # Loads content to one slide.  
   loadSlide: (slide) ->
     slide.div.html ""
     if slide.type == "html" and slide.source?
@@ -21,6 +22,7 @@ class Lecture
       .error =>
         slide.div.html "<center>There was an unusual accident during the load.</center>"
         
+    # TODO :  move this particular type of slide out of the general library
     else if slide.type == "turtleDen"
       turtle.run "", document.getElementById(@fullName + slide.name)
   
@@ -50,6 +52,7 @@ class Lecture
         text: "Run"
         class: "btn"
         click: =>
+          # TODO :  this should be more universal
           turtle.run cm.getValue(), document.getElementById(@fullName + slide.drawTo)
           if !@data.userCode?
             @data.userCode = {}
@@ -65,6 +68,7 @@ class Lecture
     if slide.sound?
       @playSound slide, slide.sound, slide.talk
   
+  # Plays sound and, moreover, plugs saved events to the proper place.
   playSound: (slide, soundName, talkName) ->
     slide.soundObject = soundManager.createSound
       id: soundName
@@ -80,14 +84,17 @@ class Lecture
   
       slide.soundObject.play()
   
+  # Only visible slides should be able to play sounds.
   stopSound: (slide) ->
     soundManager.destruct()
 
+
+  # Following three functions moves slides' DIVs to proper places. 
   showSlide: (slideName, order, isThereSecond, toRight) ->
     if (!slideName)
       @currentSlide = @currentSlides = slideName = @data.slides[0].name
 
-    slide = @getSlide(slideName)
+    slide = @findSlide(slideName)
     slide.iconDiv.addClass "slideIconActive"
     slide.div.css "margin-left", (if isThereSecond then ((if order == 0 then "-440px" else "1px")) else "-210px")
     slide.div.css "display", "block"
@@ -100,19 +107,22 @@ class Lecture
     @loadSlide slide
   
   hideSlide: (slideName, toLeft) ->
-    slide = @getSlide(slideName)
+    slide = @findSlide(slideName)
     slide.soundObject.stop()  if slide.soundObject
     slide.div.animate { left: if toLeft then "-=100%" else "+=100%" }, 1000, -> slide.div.css "display", "none"
     slide.iconDiv.removeClass "slideIconActive"
   
   moveSlide: (slideName, lastOrder, toLeft) ->
-    slide = @getSlide slideName
+    slide = @findSlide slideName
     slide.div.animate { "margin-left": if toLeft then "-=440px" else "+=440px" }, 1000
   
+  
+  # This is where we keep notion about what to do if a user hit the back arrow.
   historyStack: new Array()
   
+  # Following two functions handle the first response to a user's click.
   forward: ->
-    slide = @getSlide @currentSlide
+    slide = @findSlide @currentSlide
     slideI = _.indexOf @data.slides, slide
     if slide.go == "nextOne"
       slide.next = @data.slides[slideI+1].name
@@ -146,7 +156,7 @@ class Lecture
     beforeSlides = @currentSlides
     $.each @currentSlides.split(" "), (i, slideName) =>
       if nextSlides.indexOf(" ") >= 0 and @currentSlides.indexOf(" ") >= 0 and
-         slideName == nextSlides.split(" ")[1]
+        slideName == nextSlides.split(" ")[1]
         @moveSlide slideName, i, false
       else
         @hideSlide slideName, false
@@ -174,13 +184,17 @@ class Lecture
     $("#" + @fullName + "backArrow").fadeIn 200
     $("#" + @fullName + "forwardArrow").fadeIn 200
   
-  getSlide: (slideName) ->
+  
+  # Finds the slide with a given name. 
+  findSlide: (slideName) ->
     i = 0
   
     while i < @data.slides.length
       return @data.slides[i]  if @data.slides[i].name == slideName
       i++
 
+# We use abbreviations in the course description file: one object for two or more slides.
+# This is where we translate them to basic slides. 
 TurtleSlidesHelper =
   turtleTalk: (slide) ->
     [
@@ -217,6 +231,8 @@ TurtleSlidesHelper =
     ]
       
 
+# In this object we keep the list of all lectures on a page and, moreover,
+# this is where we create them.
 lectures =
   ls: new Array() # list of lectures on the page
   createLecture: (theDiv) ->

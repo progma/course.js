@@ -22,6 +22,7 @@ function repeat(n, f) {
 
 turtle = {
     run: function(code, canvas, shadow) {
+        if (!shadow) shadow=false; 
         this.shadow = shadow;
       
         poziceX = 0;
