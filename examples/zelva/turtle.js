@@ -1,5 +1,4 @@
-function jdi(n)
-{
+function go(n) {
     var novaPoziceX = poziceX + n*Math.sin(uhel/360*Math.PI*2);
     var novaPoziceY = poziceY - n*Math.cos(uhel/360*Math.PI*2);
     turtle.drawLine(poziceX, poziceY, novaPoziceX, novaPoziceY);
@@ -7,9 +6,18 @@ function jdi(n)
     poziceY = novaPoziceY;
 }
 
-function doprava(u)
-{
+function right(u) {
     uhel = (uhel + u) % 360;
+}
+
+function left(u) {
+    right(360 - u);
+}
+
+function repeat(n, f) {
+    for (var i = 0; i < n; i++) {
+        f.apply(this, [].slice.call(arguments, 2));
+    }
 }
 
 turtle = {
