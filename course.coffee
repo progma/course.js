@@ -155,8 +155,7 @@ class Lecture
     nextSlides = @historyStack.pop()
     beforeSlides = @currentSlides
     $.each @currentSlides.split(" "), (i, slideName) =>
-      if nextSlides.indexOf(" ") >= 0 and @currentSlides.indexOf(" ") >= 0 and
-        slideName == nextSlides.split(" ")[1]
+      if nextSlides.indexOf(" ") >= 0 and @currentSlides.indexOf(" ") >= 0 and slideName == nextSlides.split(" ")[1]
         @moveSlide slideName, i, false
       else
         @hideSlide slideName, false
