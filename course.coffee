@@ -74,13 +74,13 @@ class Lecture
       id: soundName
       url: @data.mediaRoot + "/" + soundName
       
-    $.getJSON @data.mediaRoot + "/" + talkName, (recordingTracks) ->
-      $.each recordingTracks, (name, track) ->
-        $.map track, (event) ->
-          slide.soundObject.onPosition event.time, ->
-            playbook[name] event.value,
+    $.getJSON @data.mediaRoot + "/" + talkName, (recordingTracks) =>
+      $.each recordingTracks, (name, track) =>
+        $.map track, (event) =>
+          slide.soundObject.onPosition event.time, =>
+            playbook.playbook[name] event.value,
               codeMirror: slide.cm
-              turtleDiv: document.getElementById('#{@fullName}#{slide.drawTo}')
+              turtleDiv: document.getElementById("#{@fullName}#{slide.drawTo}")
   
       slide.soundObject.play()
   
