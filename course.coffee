@@ -2,28 +2,13 @@ $(document).ready(->
   soundManager.setup url: "lib/soundManagerSwf"
   $("div[slidedata]").each (i, div) ->
     lectures.createLecture $(div)
+  window.lectures = lectures
 )
 
 class Lecture
   constructor: (@name, @data, @div) ->
-    @fullName = @div.attr "id" + @name.replace "/", ""
+    @fullName = (@div.attr "id") + @name.replace "/", ""
     
-  showSlide: (slideName, order, isThereSecond, toRight) ->
-    if (!slideName)
-      @currentSlide = @currentSlides = slideName = @data.slides[0].name
-
-    slide = @getSlide(slideName)
-    slide.iconDiv.addClass "slideIconActive"
-    slide.div.css "margin-left", (if isThereSecond then ((if order == 0 then "-440px" else "1px")) else "-210px")
-    slide.div.css "display", "block"
-    if toRight
-      slide.div.css "left", "150%"
-      slide.div.animate { left: "-=100%" }, 1000
-    else
-      slide.div.css "left", "-50%"
-      slide.div.animate { left: "+=100%" }, 1000
-    @loadSlide slide
-
   loadSlide: (slide) ->
     slide.div.html ""
     if slide.type == "html" and slide.source?
@@ -35,6 +20,9 @@ class Lecture
         @continueLoad slide
       .error =>
         slide.div.html "<center>There was an unusual accident during the load.</center>"
+        
+    else if slide.type == "turtleDen"
+      turtle.run "", document.getElementById(@fullName + slide.name)
   
     else if slide.type == "code"
       textDiv = $("<div>");
@@ -62,11 +50,12 @@ class Lecture
         text: "Run"
         class: "btn"
         click: =>
-          window[slide.run](cm.getValue(), document.getElementById(@fullName + slide.drawTo))
+          turtle.run cm.getValue(), document.getElementById(@fullName + slide.drawTo)
           if !@data.userCode?
             @data.userCode = {}
           @data.userCode[slide.name] = slide.cm.getValue()
       ).appendTo slide.div
+      
       @continueLoad slide
       
     else if slide.type == "test"
@@ -93,26 +82,38 @@ class Lecture
   
   stopSound: (slide) ->
     soundManager.destruct()
+
+  showSlide: (slideName, order, isThereSecond, toRight) ->
+    if (!slideName)
+      @currentSlide = @currentSlides = slideName = @data.slides[0].name
+
+    slide = @getSlide(slideName)
+    slide.iconDiv.addClass "slideIconActive"
+    slide.div.css "margin-left", (if isThereSecond then ((if order == 0 then "-440px" else "1px")) else "-210px")
+    slide.div.css "display", "block"
+    if toRight
+      slide.div.css "left", "150%"
+      slide.div.animate { left: "-=100%" }, 1000
+    else
+      slide.div.css "left", "-50%"
+      slide.div.animate { left: "+=100%" }, 1000
+    @loadSlide slide
   
   hideSlide: (slideName, toLeft) ->
     slide = @getSlide(slideName)
     slide.soundObject.stop()  if slide.soundObject
-    if toLeft
-      slide.div.animate { left: "-=100%" }, 1000, -> slide.div.css "display", "none"
-    else
-      slide.div.animate { left: "+=100%" }, 1000, -> slide.div.css "display", "none"
-  
+    slide.div.animate { left: if toLeft then "-=100%" else "+=100%" }, 1000, -> slide.div.css "display", "none"
     slide.iconDiv.removeClass "slideIconActive"
   
   moveSlide: (slideName, lastOrder, toLeft) ->
-    slide = @getSlide(slideName)
-    slide.div.animate { "margin-left": "-=440px" }, 1000
+    slide = @getSlide slideName
+    slide.div.animate { "margin-left": if toLeft then "-=440px" else "+=440px" }, 1000
   
   historyStack: new Array()
   
   forward: ->
-    slide = @getSlide(@currentSlide)
-    slideI = _.indexOf(@data.slides, slide)
+    slide = @getSlide @currentSlide
+    slideI = _.indexOf @data.slides, slide
     if slide.go == "nextOne"
       slide.next = @data.slides[slideI+1].name
     else if slide.go == "nextTwo"
@@ -130,7 +131,7 @@ class Lecture
         @hideSlide slideName, true
   
     $.each slide.next.split(" "), (i, slideName) =>
-      @showSlide slideName, i, slide.next.indexOf(" ") >= 0, true  if slideName != @currentSlides.split(" ")[@currentSlides.split(" ").length - 1]
+      @showSlide slideName, i, slide.next.indexOf(" ") >= 0, true  if slideName != _.last @currentSlides.split " "
       @currentSlide = slideName
   
     @currentSlides = slide.next
@@ -140,13 +141,20 @@ class Lecture
     if @historyStack.length == 0
       alert "Toto je začátek kurzu."
       return
-    $.each @currentSlides.split(" "), (key, slideName) =>
-      @hideSlide slideName, false
+      
+    nextSlides = @historyStack.pop()
+    beforeSlides = @currentSlides
+    $.each @currentSlides.split(" "), (i, slideName) =>
+      if nextSlides.indexOf(" ") >= 0 and @currentSlides.indexOf(" ") >= 0 and
+         slideName == nextSlides.split(" ")[1]
+        @moveSlide slideName, i, false
+      else
+        @hideSlide slideName, false
   
-    @currentSlides = @historyStack.pop()
-    $.each @currentSlides.split(" "), (key, val) =>
-      @showSlide val, false
-      @currentSlide = val
+    @currentSlides = nextSlides
+    $.each @currentSlides.split(" "), (i, slideName) =>
+      @showSlide slideName, i, @currentSlides.indexOf(" ") >= 0    if slideName != beforeSlides.split(" ")[0]
+      @currentSlide = slideName
   
     @showArrows (if @currentSlides.indexOf(" ") >= 0 then 2 else 1)
   
@@ -195,11 +203,10 @@ TurtleSlidesHelper =
       type: "code"
       text: slide.text
       code: slide.code
-      run: "turtle.run"
       drawTo: slide.name + "TurtleDen"
     ,
       name: slide.name + "TurtleDen"
-      type: "html"
+      type: "turtleDen"
       go: "move"
     ,
       name: slide.name + "Test"

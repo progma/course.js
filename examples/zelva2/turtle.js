@@ -21,7 +21,9 @@ function repeat(n, f) {
 }
 
 turtle = {
-    run: function(code, canvas) {
+    run: function(code, canvas, shadow) {
+        this.shadow = shadow;
+      
         poziceX = 0;
         poziceY = 0;
         uhel = 0;
@@ -31,15 +33,15 @@ turtle = {
             turtle.paper.remove();
         }
 
-        var paper = Raphael(canvas, 380, 200);
+        var paper = Raphael(canvas, 380, 480);
         turtle.paper = paper;
-        paper.rect(0, 0, 380, 200).attr({ fill: "#fff" });
+        paper.rect(0, 0, 380, 480).attr({ fill: "#fff" });
         eval(code);
         turtle.drawTurtle();
     },
 
     drawLine: function(fromX, fromY, toX, toY) {
-        turtle.paper.path("M" + (fromX+100) + " " + (fromY+100) + "L" + (toX+100) + " " + (toY+100));
+        turtle.paper.path("M" + (fromX+100) + " " + (fromY+100) + "L" + (toX+100) + " " + (toY+100)).attr({color: shadow ? "grey" : "red"});
     },
 
     drawTurtle: function() {
