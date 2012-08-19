@@ -26,13 +26,15 @@ class Lecture
 
   loadSlide: (slide) ->
     slide.div.html ""
-    if slide.type == "html"
+    if slide.type == "html" and slide.source?
       $.ajax(
         url: @name + "/" + slide.source
         dataType: "text"
       ).done (data) =>
         slide.div.html data
         @continueLoad slide
+      .error =>
+        slide.div.html "<center>There was an unusual accident during the load.</center>"
   
     else if slide.type == "code"
       cm = new CodeMirror(slide.div.get(0),
@@ -45,8 +47,14 @@ class Lecture
         class: "btn"
         click: =>
           eval("#{slide.run}(cm.getValue(), document.getElementById('#{@fullName}#{slide.drawTo}'))")
+          if !@data.userCode?
+            @data.userCode = {}
+          @data.userCode[slide.name] = slide.cm.getValue()
       ).appendTo slide.div
       @continueLoad slide
+      
+    else if slide.type == "test"
+      slide.div.html("Testing happens here.")
   
   continueLoad: (slide) ->
     if slide.sound?
@@ -55,13 +63,15 @@ class Lecture
   playSound: (slide, soundName, talkName) ->
     slide.soundObject = soundManager.createSound
       id: soundName
-      url: @name + "/" + soundName
+      url: @data.mediaRoot + "/" + soundName
       
-    $.getJSON @name + "/" + talkName + ".talk", (recordingTracks) ->
+    $.getJSON @data.mediaRoot + "/" + talkName, (recordingTracks) ->
       $.each recordingTracks, (name, track) ->
         $.map track, (event) ->
           slide.soundObject.onPosition event.time, ->
-            playbook[name] event.value, slide.cm
+            playbook[name] event.value,
+              codeMirror: slide.cm
+              turtleDiv: document.getElementById('#{@fullName}#{slide.drawTo}')
   
       slide.soundObject.play()
   
@@ -86,7 +96,14 @@ class Lecture
   
   forward: ->
     slide = @getSlide(@currentSlide)
-    unless slide.next
+    slideI = _.indexOf(@data.slides, slide)
+    if slide.go == "nextOne"
+      slide.next = @data.slides[slideI+1].name
+    else if slide.go == "nextTwo"
+      slide.next = @data.slides[slideI+1].name + " " + @data.slides[slideI+2].name
+    else if slide.go == "move"
+      slide.next = @currentSlide + " " + @data.slides[slideI+1].name
+    else if !slide.next?
       alert "Toto je konec kurzu."
       return
     @historyStack.push @currentSlides
@@ -140,6 +157,40 @@ class Lecture
       return @data.slides[i]  if @data.slides[i].name == slideName
       i++
 
+TurtleSlidesHelper =
+  turtleTalk: (slide) ->
+    [
+      name: slide.name + "TextPad"
+      type: "code"
+      talk: slide.talk
+      sound: slide.sound
+      run: "turtle.run"
+      drawTo: slide.name + "TurtleDen"
+    ,
+      name: slide.name + "TurtleDen"
+      type: "html"
+      source: "screen.html"
+      go: slide.go
+    ]
+  
+  turtleTask: (slide) -> 
+    [
+      name: slide.name + "TextPad"
+      type: "code"
+      source: slide.text
+    ,
+      name: slide.name + "TurtleDen"
+      type: html
+      go: "move"
+    ,
+      name: slide.name + "Test"
+      type: "test"
+      code: slide.name + "TextPad"
+      expected: slide.expected
+      go: slide.go
+    ]
+      
+
 lectures =
   ls: new Array() # list of lectures on the page
   createLecture: (theDiv) ->
@@ -147,6 +198,15 @@ lectures =
     innerSlides = $("<div>", { class: "innerSlides" })
     name = theDiv.attr("slidedata")
     $.getJSON(name + "/desc.json", (data) =>
+      data.slides = _.reduce data.slides, (memo, slide)->
+        if TurtleSlidesHelper[slide.type]?
+          memo = memo.concat TurtleSlidesHelper[slide.type](slide)
+        else
+          memo.push slide
+        return memo
+      , []
+      window.data = data
+      
       newLecture = new Lecture name, data, theDiv
       $.each newLecture.data["load"], (key, val) -> $.getScript name + "/" + val
 
