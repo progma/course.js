@@ -1,0 +1,80 @@
+{
+    "mediaRoot": "http://brun.cz/sklad/zelva/",
+    "slides": [
+        {
+            "name": "intro",
+            "type": "html",
+            "source": "intro.html",
+            "go": "nextTwo"
+        },
+        {
+            "name": "ctverec",
+            "type": "turtleTalk",
+            "sound": "01-ctverec.mp3",
+            "talk": "01-ctverec.json",
+            "go": "nextTwo"
+        },
+        {
+            "name": "sestiuhelnik",
+            "type": "turtleTask",
+            "text": "01-sestiuhelnik.html",
+            "expected": "01-sestiuhelnik.turtle",
+            "go": "nextTwo"
+        },
+        {
+            "name": "function",
+            "type": "turtleTalk",
+            "sound": "02-function.mp3",
+            "talk": "02-function.json",
+            "go": "nextTwo"
+        },
+        {
+            "name": "repeat",
+            "type": "turtleTalk",
+            "sound": "03-repeat-take02.mp3",
+            "talk": "03-repeat-take02.json",
+            "go": "nextTwo"
+        },
+        {
+            "name": "cell",
+            "type": "turtleTask",
+            "text": "03-cell.html",
+            "expected": "03-cell.turtle",
+            "go": "nextTwo"
+        },
+        {
+            "name": "argument",
+            "type": "turtleTalk",
+            "sound": "04-argument.mp3",
+            "talk": "04-argument.json",
+            "go": "nextTwo"
+        },
+        {
+            "name": "house",
+            "type": "turtleTask",
+            "text": "04-house.html",
+            "code": "04-house.start.turtle",
+            "expected": "04-house.turtle",
+            "go": "nextTwo"
+        },
+        {
+            "name": "polygon",
+            "type": "turtleTask",
+            "text": "04-polygon.html",
+            "expected": "04-polygon.turtle",
+            "go": "nextTwo"
+        },
+        {
+            "name": "kruznice",
+            "type": "turtleTalk",
+            "sound": "05-kruznice.mp3",
+            "talk": "05-kruznice.json",
+            "go": "nextOne"
+        },
+        {
+            "name": "wellDone",
+            "type": "html",
+            "source": "wellDone.html"
+        }
+    ]
+}
