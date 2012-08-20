@@ -1,8 +1,4 @@
 {
-    "load": [
-        "raphael-min.js",
-        "turtle.js"
-    ],
     "mediaRoot": "http://brun.cz/sklad/zelva/",
     "slides": [
         {

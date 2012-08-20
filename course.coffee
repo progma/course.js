@@ -1,5 +1,7 @@
 $(document).ready(->
   soundManager.setup url: "lib/soundManagerSwf"
+  $.ajaxSetup
+    cache: false
   $("div[slidedata]").each (i, div) ->
     lectures.createLecture $(div)
   window.lectures = lectures    # nice to have in debugging process
@@ -173,10 +175,6 @@ class Lecture
   
   
   # Arrows!
-  hideArrows: (slidesNo) ->
-    $("#" + @fullName + "backArrow").fadeOut 200
-    $("#" + @fullName + "forwardArrow").fadeOut 200
-  
   showArrows: (slidesNo) ->
     if slidesNo == 2
       $("#" + @fullName + "backArrow").css "margin-left", "-490px"
@@ -186,6 +184,17 @@ class Lecture
       $("#" + @fullName + "forwardArrow").css "margin-left", "220px"
     $("#" + @fullName + "backArrow").fadeIn 200
     $("#" + @fullName + "forwardArrow").fadeIn 200
+    
+  hideArrows: (slidesNo) ->
+    $("#" + @fullName + "backArrow").fadeOut 200
+    $("#" + @fullName + "forwardArrow").fadeOut 200
+  
+  # Previews!
+  showPreview: (slide) ->
+    slide.iconDiv.offset().left
+  
+  hidePreview: (slide) ->
+    
   
   
   # Finds the slide with a given name. 
@@ -254,7 +263,6 @@ lectures =
       , []
       
       newLecture = new Lecture name, data, theDiv
-      $.each newLecture.data["load"], (key, val) -> $.getScript name + "/" + val
 
       $("<div>",
         id: newLecture.fullName + "backArrow"
@@ -268,6 +276,8 @@ lectures =
           id: "iconOf" + newLecture.fullName + slide.name
           class: "slideIcon"
           style: (if slide.icon then "background-image: url('" + name + "/" + slide.icon + "')" else "background-image: url('icons/" + slide.type + ".png')")
+          mouseover: -> newLecture.showPreview(slide)
+          mouseout: -> newLecture.hidePreview(slide)
         ).appendTo(slideList)
         slideDiv = $("<div>",
           id: newLecture.fullName + slide.name
