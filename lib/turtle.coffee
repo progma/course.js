@@ -1,9 +1,5 @@
 step = 5
-timeInt = 100
-
-startX    = 0
-startY    = 0
-startUhel = 0
+timeInt = 1000
 
 activeTurtle = null
 
@@ -18,12 +14,15 @@ MV = (len) ->
 class Turtle
   actions: []
 
-  constructor: (@x = 0, @y = 0, @angle = 0) ->
+  constructor: (@startX = 100, @startY = 100, @angle = 0) ->
+    @x = 0
+    @y = 0
+    
     @im = turtle.paper.image "examples/zelva/zelva.png"
-                           , startX + 90
-                           , startY + 84
+                           , @startX - 10
+                           , @startY - 16
                            , 20, 30
-    @im.rotate startUhel
+    @im.rotate @angle
 
   addAction: (a) ->
     @actions.push a
@@ -39,21 +38,18 @@ class Turtle
         [@x, @y] = [newX, newY]
 
         trans = "...t0,#{-len}"
-        customAction = -> drawLine oldX, oldY, newX, newY
+        drawLine oldX, oldY, newX, newY
 
       when "rotate"
         a = @actions[0].angle
         @angle = (@angle + a) % 360
         trans = "...r#{a}"
-        customAction = ->
 
     @actions.shift()
     @im.animate transform: trans
-              , 100
+              , timeInt
               , "linear"
-              , =>
-                customAction()
-                @runActions()
+              , => @runActions()
 
 
 computeCoords = (x,y,len,angle) ->
@@ -79,9 +75,9 @@ computeCoords = (x,y,len,angle) ->
     i++
 
 drawLine = (fromX, fromY, toX, toY) ->
-  turtle.paper.path("M#{fromX + 100} #{fromY + 100}L#{toX + 100} #{toY + 100}")
-    .attr stroke: (if @shadow then "yellow" else "red")
-
+  turtle.paper.path("M#{fromX + startX} #{fromY + startY}L#{fromX + startX} #{fromY + startY}")
+    .attr(stroke: (if @shadow then "yellow" else "red"))
+    .animate { path: "M#{fromX + startX} #{fromY + startY}L#{toX + startX} #{toY + startY}" }, timeInt
 
 (exports ? this).turtle =
   run: (code, canvas, shadow) ->
