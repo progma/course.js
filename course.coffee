@@ -66,7 +66,7 @@ class Lecture
       @continueLoad slide
       
     else if slide.type == "test"
-      slide.div.html("Testing happens here.")
+      slide.div.html("<p>Výborně!<h2>Správné řešení</h2><p>Nejen že jsi správně vyřešil danou úlohu -- mimoděk jsi stvořil veliké umělecké dílo, jež bude svou nádherou a noblesou okouzlovat spatřující stovky nadcházejících let.<p>Nechceš ho sdílet na Facebooku?")
   
   continueLoad: (slide) ->
     if slide.sound?
