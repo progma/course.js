@@ -1,5 +1,12 @@
 step = 5
-timeInt = 1000
+timeInt = 300
+
+shadowTraceColor = "yellow"
+normalTraceColor = "red"
+
+turtleImageCorrection =
+  x: 10
+  y: 16
 
 activeTurtle = null
 
@@ -12,15 +19,15 @@ MV = (len) ->
   length: len
 
 class Turtle
-  actions: []
-
   constructor: (@startX = 100, @startY = 100, @angle = 0) ->
+    @actions = []
+    
     @x = 0
     @y = 0
     
     @im = turtle.paper.image "examples/zelva/zelva.png"
-                           , @startX - 10
-                           , @startY - 16
+                           , @startX - turtleImageCorrection.x
+                           , @startY - turtleImageCorrection.y
                            , 20, 30
     @im.rotate @angle
 
@@ -34,15 +41,14 @@ class Turtle
       when "go"
         len = @actions[0].length
         [oldX, oldY] = [@x, @y]
-        [newX, newY] = computeCoords @x, @y, len, @angle
-        [@x, @y] = [newX, newY]
+        [@x, @y] = computeCoords @x, @y, len, @angle
 
         trans = "...t0,#{-len}"
-        drawLine oldX, oldY, newX, newY
+        drawLine oldX, oldY, @x, @y
 
       when "rotate"
         a = @actions[0].angle
-        @angle = (@angle + a) % 360
+        @angle += a
         trans = "...r#{a}"
 
     @actions.shift()
@@ -57,14 +63,14 @@ computeCoords = (x,y,len,angle) ->
   newY = y - len * Math.cos(angle / 360 * Math.PI * 2)
   [newX,newY]
 
-@go = (n) ->
-  activeTurtle.addAction (MV n)
+@go = (steps) ->
+  activeTurtle.addAction (MV steps)
 
-@right = (u) ->
-  activeTurtle.addAction (RT u)
+@right = (angle) ->
+  activeTurtle.addAction (RT angle)
 
-@left = (u) ->
-  right 360 - u
+@left = (angle) ->
+  right -angle
 
 @repeat = (n, f) ->
   i = 0
@@ -75,9 +81,9 @@ computeCoords = (x,y,len,angle) ->
     i++
 
 drawLine = (fromX, fromY, toX, toY) ->
-  turtle.paper.path("M#{fromX + startX} #{fromY + startY}L#{fromX + startX} #{fromY + startY}")
-    .attr(stroke: (if @shadow then "yellow" else "red"))
-    .animate { path: "M#{fromX + startX} #{fromY + startY}L#{toX + startX} #{toY + startY}" }, timeInt
+  turtle.paper.path("M#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}L#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}")
+    .attr(stroke: (if @shadow then shadowTraceColor else normalTraceColor))
+    .animate { path: "M#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}L#{toX + activeTurtle.startX} #{toY + activeTurtle.startY}" }, timeInt
 
 (exports ? this).turtle =
   run: (code, canvas, shadow) ->
