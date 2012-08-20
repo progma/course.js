@@ -24,7 +24,11 @@ class Lecture
         
     # TODO :  move this particular type of slide out of the general library
     else if slide.type == "turtleDen"
-      turtle.run "", document.getElementById(@fullName + slide.name)
+      $.ajax(
+        url: @name + "/" + slide.expected
+        dataType: "text"
+      ).done (data) =>
+        turtle.run data, document.getElementById(@fullName + slide.name), true
   
     else if slide.type == "code"
       textDiv = $("<div>");
@@ -222,6 +226,7 @@ TurtleSlidesHelper =
       name: slide.name + "TurtleDen"
       type: "turtleDen"
       go: "move"
+      expected: slide.expected
     ,
       name: slide.name + "Test"
       type: "test"

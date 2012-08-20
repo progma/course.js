@@ -22,7 +22,6 @@ function repeat(n, f) {
 
 turtle = {
     run: function(code, canvas, shadow) {
-        if (!shadow) shadow=false; 
         this.shadow = shadow;
       
         poziceX = 0;
@@ -42,7 +41,7 @@ turtle = {
     },
 
     drawLine: function(fromX, fromY, toX, toY) {
-        turtle.paper.path("M" + (fromX+100) + " " + (fromY+100) + "L" + (toX+100) + " " + (toY+100)).attr({color: shadow ? "grey" : "red"});
+        turtle.paper.path("M" + (fromX+100) + " " + (fromY+100) + "L" + (toX+100) + " " + (toY+100)).attr({stroke: (this.shadow ? "yellow" : "red")});
     },
 
     drawTurtle: function() {
