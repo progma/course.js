@@ -1,6 +1,5 @@
 defaultTotalTime = 4000       # ms
 rotationTime = 0.2            # one degree rotation time = rotationTime * one step time
-msForStep = undefined         # will be computed
 
 shadowTraceColor = "yellow"
 normalTraceColor = "red"
@@ -42,7 +41,7 @@ class Turtle
       memo += (rotationTime * action.angle)   if action.angle?
       memo
     , 0
-    msForStep = @totalTime / totalSteps
+    @msForStep = @totalTime / totalSteps
 
   runActions: ->
     return if @actions.length == 0
@@ -55,7 +54,7 @@ class Turtle
         [@x, @y] = computeCoords @x, @y, len, @angle
 
         trans = "...t0,#{-len}"
-        drawLine oldX, oldY, @x, @y
+        drawLine oldX, oldY, @x, @y, @msForStep
 
       when "rotate"
         a = currentAction.angle
@@ -64,7 +63,7 @@ class Turtle
 
     @actions.shift()
     
-    aniTime = msForStep * (currentAction.length ? (rotationTime * currentAction.angle))
+    aniTime = @msForStep * (currentAction.length ? (rotationTime * currentAction.angle))
     @im.animate transform: trans
               , aniTime
               , "linear"
@@ -93,7 +92,7 @@ computeCoords = (x,y,len,angle) ->
     f args...
     i++
 
-drawLine = (fromX, fromY, toX, toY) ->
+drawLine = (fromX, fromY, toX, toY, msForStep) ->
   timeNeeded = msForStep * Math.sqrt((fromX-toX)*(fromX-toX)+(fromY-toY)*(fromY-toY))
   turtle.paper.path("M#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}L#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}")
     .attr(stroke: (if turtle.shadow then shadowTraceColor else normalTraceColor))
