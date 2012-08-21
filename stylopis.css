@@ -74,11 +74,31 @@
 .arrow-e {
     background-image: url("icons/eastArrow.png");
     margin-left: 220px;
+    
+    opacity: .5;
+    transition: opacity .5s ease-in-out;
+    -webkit-transition: opacity .5s ease-in-out;
+    -moz-transition: opacity .5s ease-in-out;
+    -ms-transition: opacity .5s ease-in-out;
+}
+
+.arrow-e:hover {
+    opacity: 1;
 }
 
 .arrow-w {
     background-image: url("icons/westArrow.png");
     margin-left: -260px;
+    
+    opacity: .5;
+    transition: opacity .5s ease-in-out;
+    -webkit-transition: opacity .5s ease-in-out;
+    -moz-transition: opacity .5s ease-in-out;
+    -ms-transition: opacity .5s ease-in-out;
+}
+
+.arrow-w:hover {
+    opacity: 1;
 }
 
 .player {

@@ -3,8 +3,6 @@ lectureAdd = (newLecture, container, slideList) ->
       id: newLecture.fullName + "backArrow"
       class: "arrow-w"
       click: -> newLecture.back()
-      mouseover: -> $(this).animate { opacity: "+=0.4" }, 500
-      mouseout: -> $(this).animate { opacity: "-=0.4" }, 500
     ).appendTo container
 
     $.each newLecture.data["slides"], (i, slide) ->
@@ -29,8 +27,6 @@ lectureAdd = (newLecture, container, slideList) ->
       id: newLecture.fullName + "forwardArrow"
       class: "arrow-e"
       click: -> newLecture.forward()
-      mouseover: -> $(this).animate { opacity: "+=0.4" }, 500
-      mouseout: -> $(this).animate { opacity: "-=0.4" }, 500
     ).appendTo container
 
     slideList.appendTo newLecture.div
