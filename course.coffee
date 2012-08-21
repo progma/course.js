@@ -8,9 +8,9 @@ $(document).ready(->
 )
 
 
-# We use abbreviations in the course description file: one object for two or more slides.
-# This is where we translate them to basic slides. Every function stands
-# for an advanced slide.
+# We use abbreviations in the course description file: one object for two or
+# more slides. This is where we translate them to basic slides. Every function
+# stands for an advanced slide.
 TurtleSlidesHelper =
   turtleTalk: (slide) ->
     [
@@ -52,10 +52,12 @@ TurtleSlidesHelper =
 # this is where we create them.
 lectures =
   ls: new Array() # list of lectures on the page
+  baseDir: ""
+
   createLecture: (theDiv) ->
     slideList = $("<div>", { class: "slideList" })
     innerSlides = $("<div>", { class: "innerSlides" })
-    name = theDiv.attr("slidedata")
+    name = @baseDir + theDiv.attr("slidedata")
 
     $.getJSON(name + "/desc.json", (data) =>
       data.slides = _.reduce data.slides, (memo, slide)->
@@ -72,5 +74,5 @@ lectures =
       @ls.push newLecture
       newLecture.showSlide `undefined`, 0, false, true
     ).error ->
-      slideList.html "<p style='position: relative; top: 0.5em'>Course at '" + name + "' == not available."
+      slideList.html pageDesign.courseNAProblem
       slideList.appendTo theDiv
