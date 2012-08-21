@@ -1,4 +1,3 @@
-step = 5
 timeInt = 300
 
 shadowTraceColor = "yellow"
@@ -20,11 +19,12 @@ MV = (len) ->
 
 class Turtle
   constructor: (@startX = 100, @startY = 100, @angle = 0) ->
+    # Stack of actions to perform
     @actions = []
-    
+
     @x = 0
     @y = 0
-    
+
     @im = turtle.paper.image "examples/zelva/zelva.png"
                            , @startX - turtleImageCorrection.x
                            , @startY - turtleImageCorrection.y
@@ -82,7 +82,7 @@ computeCoords = (x,y,len,angle) ->
 
 drawLine = (fromX, fromY, toX, toY) ->
   turtle.paper.path("M#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}L#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}")
-    .attr(stroke: (if @shadow then shadowTraceColor else normalTraceColor))
+    .attr(stroke: (if turtle.shadow then shadowTraceColor else normalTraceColor))
     .animate { path: "M#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}L#{toX + activeTurtle.startX} #{toY + activeTurtle.startY}" }, timeInt
 
 (exports ? this).turtle =
