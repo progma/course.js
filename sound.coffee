@@ -1,18 +1,17 @@
 
 # Plays sound and, moreover, plugs saved events to the proper place.
-playSound = (slide, soundName, talkName, mediaRoot) ->
+playSound = (slide, mediaRoot, fullName) ->
+  unless slide.soundObject?
+    createSoundManager slide, mediaRoot, fullName
+
+  slide.soundObject.play()
+
+createSoundManager = (slide, mediaRoot, fullName) ->
   slide.soundObject = soundManager.createSound
-    id: soundName
-    url: mediaRoot + "/" + soundName
+    id : slide.sound
+    url: mediaRoot + "/" + slide.sound
 
-  addEventsToManager = (name, track) ->
-    $.map track, (event) =>
-      slide.soundObject.onPosition event.time, =>
-        playbook.playbook[name] event.value,
-          codeMirror: slide.cm
-          turtleDiv: document.getElementById("#{@fullName}#{slide.drawTo}")
-
-  $.getJSON mediaRoot + "/" + talkName, (recordingTracks) =>
+  $.getJSON mediaRoot + "/" + slide.talk, (recordingTracks) ->
     # Dirty hack.
     # Order matters!
     tracks = [
@@ -23,9 +22,14 @@ playSound = (slide, soundName, talkName, mediaRoot) ->
       "bufferContents"
     ]
     for t in tracks
-      addEventsToManager t, recordingTracks[t]
+      addEventsToManager slide, t, recordingTracks[t], fullName
 
-  slide.soundObject.play()
+addEventsToManager = (slide, name, track, fullName) ->
+  $.map track, (event) =>
+    slide.soundObject.onPosition event.time, ->
+      playbook.playbook[name] event.value,
+        codeMirror: slide.cm
+        turtleDiv: document.getElementById("#{fullName}#{slide.drawTo}")
 
 
 # Only visible slides should be able to play sounds.

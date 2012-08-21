@@ -36,10 +36,15 @@ lectureAdd = (newLecture, container, slideList) ->
     slideList.appendTo newLecture.div
     container.appendTo newLecture.div
 
+# Following three functions moves slides' DIVs to proper places.
 showSlide = (slide, order, isThereSecond, toRight) ->
   slide.iconDiv.addClass "slideIconActive"
-  slide.div.css "margin-left", (if isThereSecond then ((if order == 0 then "-440px" else "1px")) else "-210px")
+  slide.div.css "margin-left"
+              , if isThereSecond then (
+                    if order == 0 then "-440px" else "1px"
+                ) else "-210px"
   slide.div.css "display", "block"
+
   if toRight
     slide.div.css "left", "150%"
     slide.div.animate { left: "-=100%" }, 1000
@@ -87,10 +92,15 @@ testResultPage = """
 loadProblem = """
   <center>There was an unusual accident during the load.</center>
   """
+courseNAProblem = """
+  <p style='position: relative; top: 0.5em'>
+    Course at '" + name + "' == not available.
+  """
 
 (exports ? this).pageDesign =
   lectureAdd: lectureAdd
 
+  # Following three functions moves slides' DIVs to proper places.
   showSlide: showSlide
   hideSlide: hideSlide
   moveSlide: moveSlide
@@ -101,3 +111,4 @@ loadProblem = """
 
   testResultPage: testResultPage
   loadProblem: loadProblem
+  courseNAProblem: courseNAProblem

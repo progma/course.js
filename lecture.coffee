@@ -11,6 +11,10 @@ class Lecture
   constructor: (@name, @data, @div) ->
     @fullName = (@div.attr "id") + @name.replace "/", ""
 
+    # This is where we keep notion about what to do if a user hit the back
+    # arrow.
+    @historyStack = new Array()
+
   # Loads content to one slide.
   loadSlide: (slide) ->
     slide.div.html ""
@@ -62,19 +66,20 @@ class Lecture
 
   loadSound: (slide) ->
     if slide.sound?
-      sound.playSound slide, slide.sound, slide.talk, @data.mediaRoot
+      sound.playSound slide, @data.mediaRoot, @fullName
 
   # Following three functions moves slides' DIVs to proper places.
   showSlide: (slideName, order, isThereSecond, toRight) ->
     if (!slideName)
-      @currentSlide = @currentSlides = slideName = @data.slides[0].name
+      @currentSlide  = slideName = @data.slides[0].name
+      @currentSlides = [@currentSlide]
 
-    slide = @findSlide(slideName)
+    slide = @findSlide slideName
     pageDesign.showSlide slide, order, isThereSecond, toRight
     @loadSlide slide
 
   hideSlide: (slideName, toLeft) ->
-    slide = @findSlide(slideName)
+    slide = @findSlide slideName
     sound.stopSound slide if slide.soundObject
     pageDesign.hideSlide slide, toLeft
 
@@ -82,40 +87,38 @@ class Lecture
     slide = @findSlide slideName
     pageDesign.moveSlide slide, toLeft
 
-  # This is where we keep notion about what to do if a user hit the back arrow.
-  historyStack: new Array()
-
   # Following two functions handle the first response to a user's click.
   forward: ->
     slide = @findSlide @currentSlide
     slideI = _.indexOf @data.slides, slide
 
-    if slide.go == "nextOne"
-      slide.next = @data.slides[slideI+1].name
-    else if slide.go == "nextTwo"
-      slide.next = @data.slides[slideI+1].name + " " + @data.slides[slideI+2].name
-    else if slide.go == "move"
-      slide.next = @currentSlide + " " + @data.slides[slideI+1].name
-    else if !slide.next?
-      alert "Toto je konec kurzu."
-      return
+    switch slide.go
+      when "nextOne"
+        slide.next = [@data.slides[slideI+1].name]
+      when "nextTwo"
+        slide.next = [@data.slides[slideI+1].name, @data.slides[slideI+2].name]
+      when "move"
+        slide.next = [@currentSlide, @data.slides[slideI+1].name]
+      else
+        if !slide.next?
+          alert "Toto je konec kurzu."
+          return
 
     @historyStack.push @currentSlides
-    $.each @currentSlides.split(" "), (i, slideName) =>
-      if slideName == slide.next.split(" ")[0]
+
+    $.each @currentSlides, (i, slideName) =>
+      if slideName == slide.next[0]
         @moveSlide slideName, true
       else
         @hideSlide slideName, true
 
-    $.each slide.next.split(" "), (i, slideName) =>
-      @showSlide slideName
-               , i
-               , slide.next.indexOf(" ") >= 0
-               , true  if slideName != _.last @currentSlides.split " "
+    $.each slide.next, (i, slideName) =>
+      if slideName != _.last @currentSlides
+        @showSlide slideName, i, slide.next.length > 1, true
       @currentSlide = slideName
 
     @currentSlides = slide.next
-    pageDesign.showArrows (if slide.next.indexOf(" ") >= 0 then 2 else 1), @fullName
+    @placeArrows()
 
   back: ->
     if @historyStack.length == 0
@@ -124,20 +127,26 @@ class Lecture
 
     nextSlides = @historyStack.pop()
     beforeSlides = @currentSlides
-    $.each @currentSlides.split(" "), (i, slideName) =>
-      if  nextSlides.indexOf(" ")     >= 0     and
-          @currentSlides.indexOf(" ") >= 0     and
-          slideName == nextSlides.split(" ")[1]
+
+    $.each @currentSlides, (i, slideName) =>
+      if  nextSlides.length     > 1     and
+          @currentSlides.length > 1     and
+          slideName == nextSlides[1]
         @moveSlide slideName, false
       else
         @hideSlide slideName, false
 
     @currentSlides = nextSlides
-    $.each @currentSlides.split(" "), (i, slideName) =>
-      @showSlide slideName, i, @currentSlides.indexOf(" ") >= 0    if slideName != beforeSlides.split(" ")[0]
+    $.each @currentSlides, (i, slideName) =>
+      if slideName != beforeSlides[0]
+        @showSlide slideName, i, @currentSlides.length > 1, false
       @currentSlide = slideName
 
-    pageDesign.showArrows (if @currentSlides.indexOf(" ") >= 0 then 2 else 1)
+    @placeArrows()
+
+  # Set arrows to their possition according to number of slides
+  placeArrows: ->
+    pageDesign.showArrows (if @currentSlides.length > 0 then 2 else 1)
                         , @fullName
 
   # Previews!
