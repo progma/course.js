@@ -105,40 +105,35 @@ class Turtle3D
       mesh
     
 
-
-window.onload = ->
-
-  codeMirror = CodeMirror.fromTextArea $('#codeMirrorArea').get 0
-
-  try
-    renderer = new THREE.WebGLRenderer()
-  catch e
-    console.log "loading WebGLRenderer failed, trying CanvasRenderer"
-    renderer = new THREE.CanvasRenderer()
-
-  renderer.setSize WIDTH, HEIGHT
-  document.body.appendChild renderer.domElement
-
-
-  camera = new THREE.PerspectiveCamera(75, WIDTH / HEIGHT, 0.1, 1000000)
-  camera.position.set(0, 0, 1000)
-  camera.lookAt(new THREE.Vector3(0, 0, 0))
-
-  controls = new THREE.OrbitControls(camera, renderer.domElement)
-  #controls.staticMoving = true
-  #controls.panSpeed = 0.7
-
-  scene = new THREE.Scene()
-
-  animate = ->
-    requestAnimationFrame animate
-    controls.update()
-    renderer.render scene, camera
-
-  animate()
-
-  $('#runButton').click ->
-
+(exports ? this).turtle3d =
+  run: (code, canvas, shadow) ->
+    try
+      renderer = new THREE.WebGLRenderer()
+    catch e
+      console.log "loading WebGLRenderer failed, trying CanvasRenderer"
+      renderer = new THREE.CanvasRenderer()
+  
+    renderer.setSize WIDTH, HEIGHT
+    canvas.appendChild renderer.domElement
+  
+  
+    camera = new THREE.PerspectiveCamera(75, WIDTH / HEIGHT, 0.1, 1000000)
+    camera.position.set(0, 0, 1000)
+    camera.lookAt(new THREE.Vector3(0, 0, 0))
+  
+    controls = new THREE.OrbitControls(camera, renderer.domElement)
+    #controls.staticMoving = true
+    #controls.panSpeed = 0.7
+  
+    scene = new THREE.Scene()
+  
+    animate = ->
+      requestAnimationFrame animate
+      controls.update()
+      renderer.render scene, camera
+  
+    animate()
+    
     material = new THREE.MeshLambertMaterial({ color: 0xFF0000
                                              , ambient: 0xFF0000 })
     
@@ -147,7 +142,7 @@ window.onload = ->
                             new THREE.Vector3(0,0,1),
                             material)
 
-    window.go = -> myTurtle.go.apply myTurtle, arguments
+    window.goo = -> myTurtle.go.apply myTurtle, arguments
     window.yaw = -> myTurtle.yaw.apply myTurtle, arguments
     window.pitch = -> myTurtle.pitch.apply myTurtle, arguments
     window.roll = -> myTurtle.roll.apply myTurtle, arguments
@@ -156,7 +151,9 @@ window.onload = ->
     window.color = -> myTurtle.setColor.apply myTurtle, arguments
     window.width = -> myTurtle.setWidth.apply myTurtle, arguments
 
-    eval codeMirror.getValue()
+    alert("here")
+
+    eval code
 
     scene = new THREE.Scene()
 
@@ -180,5 +177,3 @@ window.onload = ->
 
     ambLight = new THREE.AmbientLight(0x555555)
     scene.add(ambLight)
-
-    $('#numMeshes').html "#{meshes.length} meshes in the scene"
