@@ -51,11 +51,12 @@ class Turtle
       return
 
     currentAction = @actions[0]
+    aniTime = @msForStep * (currentAction.length ? (rotationTime * currentAction.angle))
     switch currentAction.type
       when "go"
         len = currentAction.length
         [oldX, oldY] = [@x, @y]
-        [@x, @y] = computeCoords @x, @y, len, @angle
+        [@x, @y] = computeCoords @x, @y, aniTime
 
         trans = "...t0,#{-len}"
         drawLine oldX, oldY, @x, @y, @msForStep, len
@@ -69,7 +70,6 @@ class Turtle
 
     @actions.shift()
     
-    aniTime = @msForStep * (currentAction.length ? (rotationTime * currentAction.angle))
     @im.animate transform: trans
               , aniTime
               , "linear"
@@ -126,10 +126,10 @@ computeCoords = (x,y,len,angle) ->
     f args...
     i++
 
-drawLine = (fromX, fromY, toX, toY, msForStep, len) ->
+drawLine = (fromX, fromY, toX, toY, aniTime) ->
   turtle.paper.path("M#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}L#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}")
     .attr(stroke: (if turtle.shadow then shadowTraceColor else normalTraceColor))
-    .animate { path: "M#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}L#{toX + activeTurtle.startX} #{toY + activeTurtle.startY}" }, msForStep * len
+    .animate { path: "M#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}L#{toX + activeTurtle.startX} #{toY + activeTurtle.startY}" }, aniTime
 
 (exports ? this).turtle =
   run: (code, canvas, shadow) ->
