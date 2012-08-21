@@ -1,4 +1,16 @@
-slide = undefined
+slide      = undefined
+jsonTracks = undefined
+codeMirror = undefined
+turtleDiv  = undefined
+
+# Order matters!
+tracks = [
+  "evaluatedCode"
+  "scrollPosition"
+  "selectionRange"
+  "scrollPosition"
+  "bufferContents"
+]
 
 # Plays sound and, moreover, plugs saved events to the proper place.
 playSound = (sl, mediaRoot, fullName) ->
@@ -17,16 +29,9 @@ createSoundManager = (slide, mediaRoot, fullName) ->
     id : slide.sound
     url: mediaRoot + "/" + slide.sound
 
+  console.log mediaRoot + "/" + slide.talk
   $.getJSON mediaRoot + "/" + slide.talk, (recordingTracks) ->
-    # Dirty hack.
-    # Order matters!
-    tracks = [
-      "evaluatedCode"
-      "scrollPosition"
-      "selectionRange"
-      "scrollPosition"
-      "bufferContents"
-    ]
+    jsonTracks = recordingTracks
     for t in tracks
       addEventsToManager slide, t, recordingTracks[t], fullName
 
@@ -34,8 +39,8 @@ addEventsToManager = (slide, name, track, fullName) ->
   $.map track, (event) =>
     slide.soundObject.onPosition event.time, ->
       playbook.playbook[name] event.value,
-        codeMirror: slide.cm
-        turtleDiv: document.getElementById("#{fullName}#{slide.drawTo}")
+        codeMirror: codeMirror=slide.cm
+        turtleDiv: turtleDiv=document.getElementById("#{fullName}#{slide.drawTo}")
 
 
 pauseSound = (e) ->
@@ -49,9 +54,19 @@ seekSound  = (e) ->
   pos   = (xcord - 22) / 400 * slide.soundObject.duration
   slide.soundObject.setPosition pos
   
+  for track in tracks
+    for event in jsonTracks[track]
+      if event.time < slide.soundObject.position
+        theEvent = event
+    continue unless theEvent?
+    console.log theEvent
+    
+    playbook.playbook[track] theEvent.value,
+      codeMirror: codeMirror
+      turtleDiv: turtleDiv
+  
 updateSeekbar = ->
   perc = slide.soundObject.position * 100 / slide.soundObject.duration
-  console.log perc
   slide.div.find(".inseek").width(perc + "%")
 
 # Only visible slides should be able to play sounds.
