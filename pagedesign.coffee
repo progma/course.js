@@ -80,6 +80,25 @@ hideArrows = (slidesNo, fullName) ->
   $("#" + fullName + "forwardArrow").fadeOut 200
 
 
+addPlayer = (div, clickHandler, seekHandler) ->
+  div.addClass "playSlide"
+  player = $("<div>",
+    class: "player"
+  ).appendTo(div)
+  pause  = $("<div>",
+    class: "pause"
+    click: clickHandler
+  ).appendTo(player)
+  seek   = $("<div>",
+    class: "seek"
+    click: seekHandler
+  ).appendTo(player)
+  inseek = $("<div>",
+    class: "inseek"
+    click: seekHandler
+  ).appendTo(seek)
+
+
 testResultPage = """
   <p>Výborně!
   <h2>Správné řešení</h2>
@@ -108,6 +127,8 @@ courseNAProblem = """
   # Arrows!
   showArrows: showArrows
   hideArrows: hideArrows
+  
+  addPlayer: addPlayer
 
   testResultPage: testResultPage
   loadProblem: loadProblem

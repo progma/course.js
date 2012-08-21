@@ -48,8 +48,13 @@
     width: 400px;
     height: 500px;
     margin-left: -210px; margin-right: 10px;
-    text-align: left;
     padding: 10px;
+    text-align: left;
+}
+
+.playSlide
+{
+    padding-top: 42px;
 }
 
 .textIcon
@@ -74,4 +79,39 @@
 .arrow-w {
     background-image: url("icons/westArrow.png");
     margin-left: -260px;
+}
+
+.player {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 32px;
+}
+
+.pause {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 5%;
+    height: 32px;
+    background-color: navy;  
+}
+
+.seek {
+    position: absolute;
+    top: 0px;
+    left: 5%;
+    width: 95%;
+    height: 32px;
+    background-color: green;
+}
+
+.inseek {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 0%;
+    height: 32px;
+    background-color: yellow;
 }
