@@ -25,6 +25,8 @@ class Turtle
 
     @x = 0
     @y = 0
+    
+    @graph = new EmbeddedGraphWithGo(@x, @y)
 
     @im = turtle.paper.image "examples/zelva/zelva.png"
                            , @startX - turtleImageCorrection.x
@@ -43,18 +45,23 @@ class Turtle
     , 0
     @msForStep = @totalTime / totalSteps
 
-  runActions: ->
-    return if @actions.length == 0
+  runActions: (callback) ->
+    if @actions.length == 0
+      callback()
+      return
 
     currentAction = @actions[0]
+    aniTime = @msForStep * (currentAction.length ? (rotationTime * currentAction.angle))
     switch currentAction.type
       when "go"
         len = currentAction.length
         [oldX, oldY] = [@x, @y]
-        [@x, @y] = computeCoords @x, @y, len, @angle
+        [@x, @y] = computeCoords @x, @y, aniTime
 
         trans = "...t0,#{-len}"
-        drawLine oldX, oldY, @x, @y, @msForStep
+        drawLine oldX, oldY, @x, @y, @msForStep, len
+        
+        @graph.go oldX, oldY, @x, @y
 
       when "rotate"
         a = currentAction.angle
@@ -63,11 +70,38 @@ class Turtle
 
     @actions.shift()
     
-    aniTime = @msForStep * (currentAction.length ? (rotationTime * currentAction.angle))
     @im.animate transform: trans
               , aniTime
               , "linear"
-              , => @runActions()
+              , => @runActions(callback)
+
+class EmbeddedGraphWithGo
+  constructor: (startX, startY) ->
+    @vertices = []
+    @vertices.push
+      x: startX
+      y: startY
+      edges: []
+
+  findVertex: (x, y) ->
+    _.find @vertices, (v) -> Math.abs(v.x - x) < 0.0001 and Math.abs(v.y - y) < 0.0001
+
+  go: (oldX, oldY, newX, newY) ->
+    oldV = @findVertex(oldX, oldY)
+    newV = @findVertex(newX, newY)
+    
+    if !newV?
+      newV = 
+        x: newX
+        y: newY
+        edges: []
+      @vertices.push newV
+      
+    oldV.edges.push newV
+    newV.edges.push oldV
+  
+  degreeSequence: ->
+    (_.map @vertices, (v) -> v.edges.length).sort()
 
 
 computeCoords = (x,y,len,angle) ->
@@ -92,11 +126,10 @@ computeCoords = (x,y,len,angle) ->
     f args...
     i++
 
-drawLine = (fromX, fromY, toX, toY, msForStep) ->
-  timeNeeded = msForStep * Math.sqrt((fromX-toX)*(fromX-toX)+(fromY-toY)*(fromY-toY))
+drawLine = (fromX, fromY, toX, toY, aniTime) ->
   turtle.paper.path("M#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}L#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}")
     .attr(stroke: (if turtle.shadow then shadowTraceColor else normalTraceColor))
-    .animate { path: "M#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}L#{toX + activeTurtle.startX} #{toY + activeTurtle.startY}" }, timeNeeded
+    .animate { path: "M#{fromX + activeTurtle.startX} #{fromY + activeTurtle.startY}L#{toX + activeTurtle.startX} #{toY + activeTurtle.startY}" }, aniTime
 
 (exports ? this).turtle =
   run: (code, canvas, shadow) ->
@@ -110,4 +143,5 @@ drawLine = (fromX, fromY, toX, toY, msForStep) ->
     activeTurtle = new Turtle()
     eval code
     activeTurtle.countTime()
-    activeTurtle.runActions()
+    activeTurtle.runActions ->
+      console.log activeTurtle.graph.degreeSequence()
