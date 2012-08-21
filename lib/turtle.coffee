@@ -42,8 +42,7 @@ class Turtle
       memo += (rotationTime * action.angle)   if action.angle?
       memo
     , 0
-    msForStep = totalTime / totalSteps
-    console.log { totalSteps, msForStep }
+    msForStep = @totalTime / totalSteps
 
   runActions: ->
     return if @actions.length == 0
