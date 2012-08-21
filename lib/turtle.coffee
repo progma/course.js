@@ -56,10 +56,10 @@ class Turtle
       when "go"
         len = currentAction.length
         [oldX, oldY] = [@x, @y]
-        [@x, @y] = computeCoords @x, @y, aniTime
+        [@x, @y] = computeCoords @x, @y, len, @angle
 
         trans = "...t0,#{-len}"
-        drawLine oldX, oldY, @x, @y, @msForStep, len
+        drawLine oldX, oldY, @x, @y, aniTime
         
         @graph.go oldX, oldY, @x, @y
 
