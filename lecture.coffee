@@ -146,7 +146,7 @@ class Lecture
 
   # Set arrows to their possition according to number of slides
   placeArrows: ->
-    pageDesign.showArrows (if @currentSlides.length > 0 then 2 else 1)
+    pageDesign.showArrows (if @currentSlides.length > 1 then 2 else 1)
                         , @fullName
 
   # Previews!
