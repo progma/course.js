@@ -1,3 +1,11 @@
+##
+## Imports
+##
+ex = (exports ? this).examine
+
+##
+## Constants
+##
 timeInt = 300
 
 shadowTraceColor = "yellow"
@@ -9,10 +17,12 @@ turtleImageCorrection =
 
 activeTurtle = null
 
+# Rotate event
 RT = (a) ->
   type: "rotate"
   angle: a
 
+# Move event
 MV = (len) ->
   type: "go"
   length: len
@@ -22,6 +32,7 @@ class Turtle
     # Stack of actions to perform
     @actions = []
 
+    # Actual relative coordinates
     @x = 0
     @y = 0
 
@@ -63,16 +74,17 @@ computeCoords = (x,y,len,angle) ->
   newY = y - len * Math.cos(angle / 360 * Math.PI * 2)
   [newX,newY]
 
-@go = (steps) ->
+go = (steps) ->
   activeTurtle.addAction (MV steps)
+go.flag = true
 
-@right = (angle) ->
+right = (angle) ->
   activeTurtle.addAction (RT angle)
 
-@left = (angle) ->
+left = (angle) ->
   right -angle
 
-@repeat = (n, f) ->
+repeat = (n, f) ->
   i = 0
   args = Array::slice.call arguments, 2
 
@@ -95,5 +107,19 @@ drawLine = (fromX, fromY, toX, toY) ->
     paper.rect(0, 0, 380, 480).attr fill: "#fff"
 
     activeTurtle = new Turtle()
-    eval code
-    activeTurtle.runActions()
+
+    res = ex.test
+      code: code
+      environment:
+        go: go
+        right: right
+        left: left
+        repeat: repeat
+
+    try
+      activeTurtle.runActions()
+    catch e
+      console.log "Problem while turtle drawing."
+      console.log e.toString()
+    finally
+      return res
