@@ -25,6 +25,8 @@ class Turtle
 
     @x = 0
     @y = 0
+    
+    @graphStart()
 
     @im = turtle.paper.image "examples/zelva/zelva.png"
                            , @startX - turtleImageCorrection.x
@@ -43,8 +45,10 @@ class Turtle
     , 0
     @msForStep = @totalTime / totalSteps
 
-  runActions: ->
-    return if @actions.length == 0
+  runActions: (callback) ->
+    if @actions.length == 0
+      callback()
+      return
 
     currentAction = @actions[0]
     switch currentAction.type
@@ -55,6 +59,8 @@ class Turtle
 
         trans = "...t0,#{-len}"
         drawLine oldX, oldY, @x, @y, @msForStep
+        
+        @graphGo oldX, oldY, @x, @y
 
       when "rotate"
         a = currentAction.angle
@@ -67,7 +73,35 @@ class Turtle
     @im.animate transform: trans
               , aniTime
               , "linear"
-              , => @runActions()
+              , => @runActions(callback)
+
+
+  graphStart: ->
+    @vertices = []
+    @vertices.push
+      x: @x
+      y: @y
+      edges: []
+
+  graphFindVertex: (x, y) ->
+    _.find @vertices, (v) -> Math.abs(v.x - x) < 0.0001 and Math.abs(v.y - y) < 0.0001
+
+  graphGo: (oldX, oldY, newX, newY) ->
+    oldV = @graphFindVertex(oldX, oldY)
+    newV = @graphFindVertex(newX, newY)
+    
+    if !newV?
+      newV = 
+        x: newX
+        y: newY
+        edges: []
+      @vertices.push newV
+      
+    oldV.edges.push newV
+    newV.edges.push oldV
+  
+  graphDegreeSequence: ->
+    (_.map @vertices, (v) -> v.edges.length).sort()
 
 
 computeCoords = (x,y,len,angle) ->
@@ -110,4 +144,5 @@ drawLine = (fromX, fromY, toX, toY, msForStep) ->
     activeTurtle = new Turtle()
     eval code
     activeTurtle.countTime()
-    activeTurtle.runActions()
+    activeTurtle.runActions ->
+      console.log activeTurtle.graphDegreeSequence()
