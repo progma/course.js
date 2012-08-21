@@ -29,7 +29,7 @@ class Lecture
     # TODO:  move this particular type of slide out of the general library
     else if slide.type == "turtleDen"
       loadText @name + "/" + slide.expected,(data) =>
-        turtle.run data, document.getElementById(@fullName + slide.name), true
+        window[slide.turtleClass].run data, document.getElementById(@fullName + slide.name), true
 
     else if slide.type == "code"
       textDiv = $("<div>")
@@ -52,8 +52,7 @@ class Lecture
         text: "Run"
         class: "btn"
         click: =>
-          # TODO :  this should be more universal
-          turtle.run cm.getValue(), document.getElementById(@fullName + slide.drawTo)
+          window[slide.turtleClass].run cm.getValue(), document.getElementById(@fullName + slide.drawTo)
           if !@data.userCode?
             @data.userCode = {}
           @data.userCode[slide.name] = slide.cm.getValue()

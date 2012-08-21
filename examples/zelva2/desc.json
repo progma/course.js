@@ -19,6 +19,7 @@
             "type": "turtleTask",
             "text": "01-sestiuhelnik.html",
             "expected": "01-sestiuhelnik.turtle",
+            "turtleClass": "turtle3d",
             "go": "nextTwo"
         },
         {

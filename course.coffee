@@ -20,10 +20,10 @@ TurtleSlidesHelper =
       sound: slide.sound
       run: "turtle.run"
       drawTo: slide.name + "TurtleDen"
+      turtleClass: slide.turtleClass ? "turtle"
     ,
       name: slide.name + "TurtleDen"
       type: "html"
-      source: "screen.html"
       go: slide.go
     ]
 
@@ -34,11 +34,13 @@ TurtleSlidesHelper =
       text: slide.text
       code: slide.code
       drawTo: slide.name + "TurtleDen"
+      turtleClass: slide.turtleClass ? "turtle"
     ,
       name: slide.name + "TurtleDen"
       type: "turtleDen"
       go: "move"
       expected: slide.expected
+      turtleClass: slide.turtleClass ? "turtle"
     ,
       name: slide.name + "Test"
       type: "test"
