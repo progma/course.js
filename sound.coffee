@@ -1,10 +1,16 @@
+slide = undefined
 
 # Plays sound and, moreover, plugs saved events to the proper place.
-playSound = (slide, mediaRoot, fullName) ->
+playSound = (sl, mediaRoot, fullName) ->
+  slide = sl
+  
   unless slide.soundObject?
     createSoundManager slide, mediaRoot, fullName
 
-  slide.soundObject.play()
+  slide.soundObject.play(
+    whileplaying: updateSeekbar
+  )
+  pageDesign.addPlayer slide.div, pauseSound, seekSound
 
 createSoundManager = (slide, mediaRoot, fullName) ->
   slide.soundObject = soundManager.createSound
@@ -31,6 +37,22 @@ addEventsToManager = (slide, name, track, fullName) ->
         codeMirror: slide.cm
         turtleDiv: document.getElementById("#{fullName}#{slide.drawTo}")
 
+
+pauseSound = (e) ->
+  if slide.soundObject.paused
+    slide.soundObject.play()
+  else
+    slide.soundObject.pause()
+
+seekSound  = (e) ->
+  xcord = e.pageX - slide.div.offset().left  # 22-420
+  pos   = (xcord - 22) / 400 * slide.soundObject.duration
+  slide.soundObject.setPosition pos
+  
+updateSeekbar = ->
+  perc = slide.soundObject.position * 100 / slide.soundObject.duration
+  console.log perc
+  slide.div.find(".inseek").width(perc + "%")
 
 # Only visible slides should be able to play sounds.
 stopSound = (slide) ->
