@@ -49,8 +49,8 @@ class Turtle
 
   countTime: ->
     totalSteps = _.reduce @actions, (memo, action) ->
-      memo += action.length                   if action.length?
-      memo += (rotationTime * action.angle)   if action.angle?
+      memo += action.length                           if action.length?
+      memo += (rotationTime * Math.abs(action.angle)) if action.angle?
       memo
     , 0
     @msForStep = @totalTime / totalSteps
@@ -65,7 +65,7 @@ class Turtle
 
     currentAction = @actions[0]
     aniTime = @msForStep *
-      (currentAction.length ? (rotationTime * currentAction.angle))
+      (currentAction.length ? (rotationTime * Math.abs(currentAction.angle)))
 
     switch currentAction.type
       when "go"
@@ -113,8 +113,7 @@ class EmbeddedGraphWithGo
 
   go: (steps) ->
     [oldX, oldY] = [@pos.x, @pos.y]
-    @pos.go steps
-    [newX, newY] = [@pos.x, @pos.y]
+    [newX, newY] = @pos.go steps
 
     oldV = @findVertex(oldX, oldY)
     newV = @findVertex(newX, newY)
