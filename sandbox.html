@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cs">
+	<head>
+		<meta charset="utf-8"/>
+		<title>Custom sandbox for turtle.run</title>
+
+		<script src="lib/CodeMirror/lib/codemirror.js"></script>
+		<link rel="stylesheet" href="lib/CodeMirror/lib/codemirror.css">
+		<script src="lib/CodeMirror/mode/javascript/javascript.js"></script>
+
+		<script src="lib/jquery-1.7.2.min.js" type="text/javascript"></script>
+		<script src="lib/underscore-min.js"></script>
+		<script src="lib/raphael-min.js"></script>
+
+		<script src="lib/quickcheck.js"></script>
+		<script src="lib/examine.js"></script>
+		<script src="lib/turtle.js"></script>
+		<script src="sandbox.js"></script>
+	</head>
+	<body>
+		<div id="turtleSpace" style="float: right"></div>
+		<textarea id="editorArea">
+go(30);
+right(20);
+go(30);
+penUp();
+go(30);
+right(100);
+go(30);
+penDown();
+color(red);
+go(30);
+right(20);
+go(30);
+		</textarea>
+		<input id="evalButton" type="button" value="Eval!"/>
+	</body>
+</html>
