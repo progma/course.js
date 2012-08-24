@@ -205,8 +205,7 @@ stdArgs =
 
 # Run tests of given property.
 # Returns either true or array of failing values.
-runWith = (args, property) ->
-  generators = Array::slice.call(arguments, 2)
+runWith = (args, property, generators...) ->
 
   n = 0  # number of successfully ran tests
   d = 0  # number of discarded tests
@@ -252,28 +251,29 @@ run = (property) ->
 ##
 ## Exports
 ##
-(exports ? this).quickCheck =
+(exports ? this).quickCheck = {
   # Arbitrary object generators
-  arbBool       : arbBool
-  arbByte       : arbByte
-  arbDouble     : arbDouble
-  arbSizedDouble: arbSizedDouble
-  arbInt        : arbInt
-  arbSizedInt   : arbSizedInt
-  arbChar       : arbChar
-  arbArray      : arbArray
-  arbArray1     : arbArray1
-  arbArrayOf    : arbArrayOf
-  arbString     : arbString
-  arbChoose     : arbChoose
+  arbBool
+  arbByte
+  arbDouble
+  arbSizedDouble
+  arbInt
+  arbSizedInt
+  arbChar
+  arbArray
+  arbArray1
+  arbArrayOf
+  arbString
+  arbChoose
 
   # Helpers for creating custom generators
-  makeShrinking : makeShrinking
-  oneOf         : oneOf
-  elements      : elements
-  frequency     : frequency
+  makeShrinking
+  oneOf
+  elements
+  frequency
 
   # Testing factory
-  run           : run
-  runWith       : runWith
-  stdArgs       : stdArgs
+  run
+  runWith
+  stdArgs
+}

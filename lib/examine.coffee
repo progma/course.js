@@ -39,7 +39,13 @@ T = (args, res = true, name = "") ->
 Tn = (args, name = "") ->
   T args, undefined, name
 
-# Testing function, example of usage:
+# Testing user code.
+#
+# In property/testedFunction is user's environment accessible via @user
+# variable. In our example below are @user.log, @user.alert, @user.foo,
+# @user.bar added to scope too.
+#
+# Example:
 #
 # examine.test {
 #   name: "Test name"
@@ -48,10 +54,13 @@ Tn = (args, name = "") ->
 #                                     # needs jQuery, use @user.fun(...) for
 #                                     # users functions
 #   environment:
-#     log: console.log                # (optional) adds objects/functions to
-#     alert: alert                    # property/testedFunction scope via @user
-#     ...                             # (given example gives @user.log and
-#                                     @ @user.alert functions)
+#     log: console.log                # (optional) adds functions to global scope
+#     alert: alert                    # for user code
+#     ...
+#
+#   constants:                        # (optional) adds constants/objects to global
+#     foo: 10                         # scope for user code
+#     bar: "not wrapped"
 #
 #   property: somePropertyToTest
 #   quickCheck: [generators in array] # if ommited dont use QuickCheck
@@ -94,6 +103,9 @@ test = (settings) ->
 
       if 'environment' of settings
         setEnvironment user, settings.environment
+
+      if 'constants' of settings
+        user[i] = val for i, val of settings.constants
 
       # Parse users code
       user.eval settings.code
@@ -179,10 +191,11 @@ stopExecution = (iframeID = sandboxID) ->
 ##
 ## Exports
 ##
-(exports ? this).examine =
-  deepeq: deepeq
-  T: T
-  Tn: Tn
-  test: test
-  sandboxID: sandboxID
-  stopExecution: stopExecution
+(exports ? this).examine = {
+  deepeq
+  T
+  Tn
+  test
+  sandboxID
+  stopExecution
+}
