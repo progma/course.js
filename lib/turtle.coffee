@@ -4,19 +4,35 @@
 ex = (exports ? this).examine
 
 ##
-## Constants
+## Settings
 ##
-defaultTotalTime = 4000    # ms
-rotationTime     = 0.2     # one degree rotation time = rotationTime * one step time
+settings =
+  defaultTotalTime: 2000  # ms
+  rotationTime    : 0.2   # one degree rotation time = rotationTime * one step time
 
-shadowTraceColor = "yellow"
-normalTraceColor = "red"
+  # Colors defined in users environment
+  shadowTraceColor: "yellow"
+  normalTraceColor: "red"
 
-turtleImageCorrection =
-  x: 10
-  y: 16
+  paperBackgroundColor: "#fff"
+  paperWidth : 380
+  paperHeight: 480
+
+  turtleImage: "examples/zelva/zelva.png"
+  turtleImageCorrection:
+    x: 10
+    y: 16
+
+  # Starting possition
+  startX: 190
+  startY: 240
+  startAngle: 0
 
 activeTurtle = null
+
+##
+## Turtle events
+##
 
 # Rotate event
 RT = (a) ->
@@ -24,13 +40,26 @@ RT = (a) ->
   angle: a
 
 # Move event
-MV = (len) ->
+MV = (steps) ->
   type: "go"
-  length: len
+  steps: steps
+
+# Pen up/down event
+PU = type: "penUp"
+PD = type: "penDown"
+
+# Change color event
+CO = (col) ->
+  type: "color"
+  color: col
+
 
 class Turtle
-  constructor: (@startX = 100, @startY = 100, @angle = 0,
-                @totalTime = defaultTotalTime) ->
+  constructor: (@startX = settings.startX,
+                @startY = settings.startY,
+                @angle  = settings.startAngle,
+                @totalTime = settings.defaultTotalTime,
+                @color     = settings.normalTraceColor) ->
 
     # Stack of actions to perform
     @actions = []
@@ -38,9 +67,9 @@ class Turtle
     # Graph for actual relative coordinates
     @graph = new EmbeddedGraphWithGo(0, 0, @angle)
 
-    @im = turtle.paper.image "examples/zelva/zelva.png"
-                           , @startX - turtleImageCorrection.x
-                           , @startY - turtleImageCorrection.y
+    @im = turtle.paper.image settings.turtleImage
+                           , @startX - settings.turtleImageCorrection.x
+                           , @startY - settings.turtleImageCorrection.y
                            , 20, 30
     @im.rotate @angle
 
@@ -49,8 +78,8 @@ class Turtle
 
   countTime: ->
     totalSteps = _.reduce @actions, (memo, action) ->
-      memo += action.length                           if action.length?
-      memo += (rotationTime * Math.abs(action.angle)) if action.angle?
+      memo += action.steps                                     if action.steps?
+      memo += (settings.rotationTime * Math.abs(action.angle)) if action.angle?
       memo
     , 0
     @msForStep = @totalTime / totalSteps
@@ -63,25 +92,34 @@ class Turtle
     unless pos?
       pos = new Position 0, 0, @angle
 
-    currentAction = @actions[0]
+    currentAction = @actions.shift()
     aniTime = @msForStep *
-      (currentAction.length ? (rotationTime * Math.abs(currentAction.angle)))
+      (currentAction.steps ? (settings.rotationTime * Math.abs(currentAction.angle)))
 
     switch currentAction.type
       when "go"
-        len = currentAction.length
+        len = currentAction.steps
         [oldX, oldY] = [pos.x, pos.y]
         [newX, newY] = pos.go len
 
         trans = "...t0,#{-len}"
-        drawLine oldX, oldY, newX, newY, aniTime
+        drawLine oldX, oldY, newX, newY, aniTime, @color if pos.penDown
 
       when "rotate"
         a = currentAction.angle
         pos.rotate a
         trans = "...r#{a}"
 
-    @actions.shift()
+      when "penUp", "penDown"
+        pos.penDown = currentAction.type == "penDown"
+
+      when "color"
+        @color = currentAction.color
+
+    # Dont animate when there is no transformation
+    unless trans?
+      aniTime = 0
+      trans = "..." # emtpy transformation
 
     @im.animate transform: trans
               , aniTime
@@ -89,7 +127,7 @@ class Turtle
               , => @runActions(callback, pos)
 
 class Position
-  constructor: (@x, @y, @angle) ->
+  constructor: (@x, @y, @angle, @penDown = true) ->
 
   go: (steps) ->
     [@x, @y] = computeCoords @x, @y, steps, @angle
@@ -100,13 +138,19 @@ class Position
 class EmbeddedGraphWithGo
   constructor: (startX, startY, startAngle) ->
     @vertices = []
-    @vertices.push
-      x: startX
-      y: startY
-      edges: []
+    @newVertex startX, startY
 
     # Actual position
     @pos = new Position startX, startY, startAngle
+
+  # Structure representing vertex on space
+  newVertex: (x, y) ->
+    newV =
+      x: x
+      y: y
+      edges: []
+    @vertices.push newV
+    newV
 
   findVertex: (x, y) ->
     _.find @vertices, (v) -> Math.abs(v.x - x) < 0.0001 and Math.abs(v.y - y) < 0.0001
@@ -114,16 +158,16 @@ class EmbeddedGraphWithGo
   go: (steps) ->
     [oldX, oldY] = [@pos.x, @pos.y]
     [newX, newY] = @pos.go steps
+    return unless @pos.penDown
 
     oldV = @findVertex(oldX, oldY)
     newV = @findVertex(newX, newY)
 
-    if !newV?
-      newV =
-        x: newX
-        y: newY
-        edges: []
-      @vertices.push newV
+    unless oldV?
+      oldV = @newVertex oldX, oldY
+
+    unless newV?
+      newV = @newVertex newX, newY
 
     oldV.edges.push newV
     newV.edges.push oldV
@@ -140,61 +184,98 @@ computeCoords = (x,y,len,angle) ->
   newY = y - len * Math.cos(angle / 360 * Math.PI * 2)
   [newX,newY]
 
-go = (steps) ->
-  activeTurtle.addAction (MV steps)
-  activeTurtle.graph.go steps
+environment =
+  go: (steps) ->
+    activeTurtle.addAction (MV steps)
+    activeTurtle.graph.go steps
 
-right = (angle) ->
-  activeTurtle.addAction (RT angle)
-  activeTurtle.graph.rotate angle
+  right: (angle) ->
+    activeTurtle.addAction (RT angle)
+    activeTurtle.graph.rotate angle
 
-left = (angle) ->
-  right -angle
+  left: (angle) ->
+    right -angle
 
-repeat = (n, f) ->
-  i = 0
-  args = Array::slice.call arguments, 2
+  repeat: (n, f, args...) ->
+    i = 0
+    f args... while i++ < n
 
-  while i < n
-    f args...
-    i++
+  penUp: ->
+    activeTurtle.addAction PU
+    activeTurtle.graph.pos.penDown = false
+
+  penDown: ->
+    activeTurtle.addAction PD
+    activeTurtle.graph.pos.penDown = true
+
+  color: (col) ->
+    activeTurtle.addAction (CO col)
+
+  # TODO
+  # print
+  # clear
+  # delay
+
+constants =
+  # Colors
+  white:   "#FFFFFF"
+  yellow:  "#FFFF00"
+  fuchsia: "#FF00FF"
+  aqua:    "#00FFFF"
+  red:     "#FF0000"
+  lime:    "#00FF00"
+  blue:    "#0000FF"
+  black:   "#000000"
+  green:   "#008000"
+  maroon:  "#800000"
+  olive:   "#808000"
+  purple:  "#800080"
+  gray:    "#808080"
+  navy:	   "#000080"
+  teal:	   "#008080"
+  silver:  "#C0C0C0"
+  brown:   "#552222"
+  orange:  "#CC3232"
 
 drawLine = (fromX, fromY, toX, toY, aniTime) ->
   atSX = activeTurtle.startX
   atSY = activeTurtle.startY
 
   turtle.paper.path("M#{fromX + atSX} #{fromY + atSY}L#{fromX + atSX} #{fromY + atSY}")
-    .attr(stroke: (if turtle.shadow then shadowTraceColor else normalTraceColor))
+    .attr(stroke: activeTurtle.color)
     .animate { path: "M#{fromX + atSX} #{fromY + atSY}L#{toX + atSX} #{toY + atSY}" }, aniTime
 
-(exports ? this).turtle =
-  lastDegreeSequence: undefined
 
-  run: (code, canvas, shadow) ->
-    @shadow = shadow
-    turtle.paper.remove()  if turtle.paper
+run = (code, canvas, shadow) ->
+  turtle.paper.remove()  if turtle.paper
 
-    paper = Raphael(canvas, 380, 480)
-    turtle.paper = paper
-    paper.rect(0, 0, 380, 480).attr fill: "#fff"
+  paper = Raphael(canvas, settings.paperWidth, settings.paperHeight)
+  turtle.paper = paper
+  paper.rect(0, 0, settings.paperWidth, settings.paperHeight)
+       .attr fill: settings.paperBackgroundColor
 
-    activeTurtle = new Turtle()
+  activeTurtle = new Turtle()
+  activeTurtle.color =
+    if shadow then settings.shadowTraceColor else settings.normalTraceColor
 
-    @result = ex.test
-      code: code
-      environment:
-        go: go
-        right: right
-        left: left
-        repeat: repeat
+  result = ex.test
+    code: code
+    environment: environment
+    constants: constants
 
-    try
-      activeTurtle.countTime()
-      @lastDegreeSequence = activeTurtle.graph.degreeSequence()
-      activeTurtle.runActions (->)
-    catch e
-      @lastDegreeSequence = undefined
-      console.log "Problem while turtle drawing."
-      console.log e.toString()
-    finally
-      return @result
+  try
+    activeTurtle.countTime()
+    turtle.lastDegreeSequence = activeTurtle.graph.degreeSequence()
+    activeTurtle.runActions (->)
+  catch e
+    turtle.lastDegreeSequence = undefined
+    console.log "Problem while turtle drawing."
+    console.log e.toString()
+  finally
+    return result
+
+(exports ? this).turtle = {
+  lastDegreeSequence: null
+  settings
+  run
+}
