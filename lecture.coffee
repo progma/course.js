@@ -8,7 +8,7 @@ loadText = (name, callback, errorHandler = null) ->
 
 
 class Lecture
-  constructor: (@name, @data, @div) ->
+  constructor: (@name, @data, @div, @errorDiv) ->
     @fullName = (@div.attr "id") + @name.replace "/", ""
 
     # This is where we keep notion about what to do if a user hit the back
@@ -26,10 +26,13 @@ class Lecture
         @loadSound slide
       , => slide.div.html pageDesign.loadProblem
 
-    # TODO:  move this particular type of slide out of the general library
+    # Display drawing areay with expected result
     else if slide.type == "turtleDen"
-      loadText @name + "/" + slide.expected,(data) =>
-        turtle.run data, document.getElementById(@fullName + slide.name), true
+      loadText @name + "/" + slide.expected, (data) =>
+        @runCode data, @fullName + slide.name, true
+
+        @expectedResult =
+          degreeSequence: turtle.lastDegreeSequence
 
     else if slide.type == "code"
       textDiv = $("<div>")
@@ -40,7 +43,12 @@ class Lecture
           textDiv.html data
           textDiv.height "80px"
 
-      cm = new CodeMirror slide.div.get(0), lineNumbers: true
+      cm = new CodeMirror slide.div.get(0),
+            lineNumbers: true
+            # autofocus: true
+            # indentWithTabs: true
+            # tabSize: 2
+            # readOnly = false # TODO
 
       if slide.code
         loadText @name + "/" + slide.code, (data) => cm.setValue data
@@ -52,17 +60,31 @@ class Lecture
         text: "Run"
         class: "btn"
         click: =>
-          # TODO :  this should be more universal
-          turtle.run cm.getValue(), document.getElementById(@fullName + slide.drawTo)
-          if !@data.userCode?
-            @data.userCode = {}
-          @data.userCode[slide.name] = slide.cm.getValue()
+          # TODO:  this should be more universal
+          #      + post code to the server
+          @runCode cm.getValue(), @fullName + slide.drawTo
       ).appendTo slide.div
 
       @loadSound slide
 
     else if slide.type == "test"
       slide.div.html pageDesign.testResultPage
+
+  runCode: (code, outputDivID, expectedCode = false) ->
+    @errorDiv.html ""
+    output = document.getElementById outputDivID
+    @lastResult = turtle.run code, output, expectedCode
+
+    unless @lastResult == true
+      console.log @lastResult.errObj
+      @errorDiv.html @lastResult.reason
+
+    unless expectedCode
+      @performTest()
+
+  performTest: ->
+    if _.isEqual @expectedResult.degreeSequence, turtle.lastDegreeSequence
+      @forward()
 
   loadSound: (slide) ->
     if slide.sound?
@@ -118,7 +140,7 @@ class Lecture
       @currentSlide = slideName
 
     @currentSlides = slide.next
-    @placeArrows()
+    @resetElements()
 
   back: ->
     if @historyStack.length == 0
@@ -142,12 +164,14 @@ class Lecture
         @showSlide slideName, i, @currentSlides.length > 1, false
       @currentSlide = slideName
 
-    @placeArrows()
+    @resetElements()
 
-  # Set arrows to their possition according to number of slides
-  placeArrows: ->
+  # Set arrows to their possition according to number of slides and empty
+  # error area
+  resetElements: ->
     pageDesign.showArrows (if @currentSlides.length > 1 then 2 else 1)
                         , @fullName
+    @errorDiv.html ""
 
   # Previews!
   showPreview: (slide) ->
