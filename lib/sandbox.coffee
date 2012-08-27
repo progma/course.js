@@ -1,13 +1,3 @@
-root = exports ? this
-
-myCodeMirror = undefined
-myPlaybackMirror = undefined
-recordingTracks = undefined
-recordingStartTime = undefined
-recordingNow = off
-
-
-
 $ ->
   errorDiv = $ "<div>", class: "errorOutput"
   errorDiv.appendTo $ "body"

@@ -29,7 +29,6 @@ createSoundManager = (slide, mediaRoot, fullName) ->
     id : slide.sound
     url: mediaRoot + "/" + slide.sound
 
-  console.log mediaRoot + "/" + slide.talk
   $.getJSON mediaRoot + "/" + slide.talk, (recordingTracks) ->
     jsonTracks = recordingTracks
     for t in tracks
@@ -59,7 +58,6 @@ seekSound  = (e) ->
       if event.time < slide.soundObject.position
         theEvent = event
     continue unless theEvent?
-    console.log theEvent
     
     playbook.playbook[track] theEvent.value,
       codeMirror: codeMirror

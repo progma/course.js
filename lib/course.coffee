@@ -1,5 +1,5 @@
 $(document).ready(->
-  soundManager.setup url: "lib/soundManagerSwf"
+  soundManager.setup url: "lib/external/soundManagerSwf"
   $.ajaxSetup
     cache: false
   $("div[slidedata]").each (i, div) ->
